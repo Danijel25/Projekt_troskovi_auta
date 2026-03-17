@@ -1,16 +1,16 @@
 {
-	"hooks": {
-		"UserPromptSubmit": [
-			{
-				"type": "command",
-				"command": "powershell.exe -ExecutionPolicy Bypass -Command \"$input | Add-Content -Path 'C:\\Users\\dkrizmani\\source\\repos\\Projekt_troskovi_auta\\lab-1\\agent_log.txt'\""
-			}
-		],
-		"preToolUse": [
-            {
-                "type": "command",
-                "command": "powershell.exe -ExecutionPolicy Bypass -Command \"$input | Add-Content -Path 'C:\\Users\\dkrizmani\\source\\repos\\Projekt_troskovi_auta\\lab-1\\agent_log.txt'\""
-            }
-        ]
-	}
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "type": "command",
+        "command": "powershell.exe -ExecutionPolicy Bypass -Command \"Add-Content -Path 'C:\\Users\\dkrizmani\\source\\repos\\Projekt_troskovi_auta\\lab-1\\agent_log.txt' -Value ([Console]::In.ReadToEnd())\""
+      }
+    ],
+    "preToolUse": [
+      {
+        "type": "command",
+        "command": "powershell.exe -ExecutionPolicy Bypass -Command \"Add-Content -Path 'C:\\Users\\dkrizmani\\source\\repos\\Projekt_troskovi_auta\\lab-1\\agent_log.txt' -Value ([Console]::In.ReadToEnd())\""
+      }
+    ]
+  }
 }
