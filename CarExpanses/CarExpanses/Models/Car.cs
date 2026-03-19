@@ -19,4 +19,8 @@ public class Car
     public decimal PurchasePrice { get; set; }
     public DateTime PurchaseDate { get; set; }
     public FuelType FuelType { get; set; }
+    public List<FuelExpense> FuelExpenses { get; set; }
+    public List<ServiceRecord> ServiceRecords { get; set; }
+    public List<Insurance> Insurances { get; set; }
+    public List<CarTire> CarTires { get; set; }
 }
