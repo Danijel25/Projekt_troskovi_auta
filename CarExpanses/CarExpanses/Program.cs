@@ -3,6 +3,27 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+var maintenanceCategory = new ExpenseCategory
+{
+    Id = 1,
+    Name = "Maintenance",
+    Expenses = new List<Expense>()
+};
+
+var registrationCategory = new ExpenseCategory
+{
+    Id = 2,
+    Name = "Registration",
+    Expenses = new List<Expense>()
+};
+
+var parkingCategory = new ExpenseCategory
+{
+    Id = 3,
+    Name = "Parking",
+    Expenses = new List<Expense>()
+};
+
 var user1 = new User
 {
     Id = 1,
@@ -26,7 +47,8 @@ var car1 = new Car
     FuelExpenses = new List<FuelExpense>(),
     ServiceRecords = new List<ServiceRecord>(),
     Insurances = new List<Insurance>(),
-    CarTires = new List<CarTire>()
+    CarTires = new List<CarTire>(),
+    Expenses = new List<Expense>()
 };
 
 var tire1 = new Tire
@@ -84,11 +106,35 @@ var insurance1 = new Insurance
     Car = car1
 };
 
+var expense1 = new Expense
+{
+    Id = 8001,
+    Description = "Annual vehicle registration and road tax",
+    Amount = 362m,
+    Date = new DateTime(2026, 1, 14),
+    CategoryId = registrationCategory.Id,
+    Category = registrationCategory
+};
+
+var expense2 = new Expense
+{
+    Id = 8002,
+    Description = "City center parking pass (monthly)",
+    Amount = 58m,
+    Date = new DateTime(2026, 2, 1),
+    CategoryId = parkingCategory.Id,
+    Category = parkingCategory
+};
+
 car1.CarTires.Add(carTire1);
 tire1.CarTires.Add(carTire1);
 car1.FuelExpenses.Add(fuelExpense1);
 car1.ServiceRecords.Add(serviceRecord1);
 car1.Insurances.Add(insurance1);
+car1.Expenses.Add(expense1);
+car1.Expenses.Add(expense2);
+registrationCategory.Expenses.Add(expense1);
+parkingCategory.Expenses.Add(expense2);
 user1.Cars.Add(car1);
 
 var user2 = new User
@@ -114,7 +160,8 @@ var car2 = new Car
     FuelExpenses = new List<FuelExpense>(),
     ServiceRecords = new List<ServiceRecord>(),
     Insurances = new List<Insurance>(),
-    CarTires = new List<CarTire>()
+    CarTires = new List<CarTire>(),
+    Expenses = new List<Expense>()
 };
 
 var tire2 = new Tire
@@ -172,11 +219,35 @@ var insurance2 = new Insurance
     Car = car2
 };
 
+var expense3 = new Expense
+{
+    Id = 8003,
+    Description = "Air conditioning disinfection and filter service",
+    Amount = 79m,
+    Date = new DateTime(2026, 2, 10),
+    CategoryId = maintenanceCategory.Id,
+    Category = maintenanceCategory
+};
+
+var expense4 = new Expense
+{
+    Id = 8004,
+    Description = "Public parking garage fees",
+    Amount = 34m,
+    Date = new DateTime(2026, 2, 26),
+    CategoryId = parkingCategory.Id,
+    Category = parkingCategory
+};
+
 car2.CarTires.Add(carTire2);
 tire2.CarTires.Add(carTire2);
 car2.FuelExpenses.Add(fuelExpense2);
 car2.ServiceRecords.Add(serviceRecord2);
 car2.Insurances.Add(insurance2);
+car2.Expenses.Add(expense3);
+car2.Expenses.Add(expense4);
+maintenanceCategory.Expenses.Add(expense3);
+parkingCategory.Expenses.Add(expense4);
 user2.Cars.Add(car2);
 
 var user3 = new User
@@ -202,7 +273,8 @@ var car3 = new Car
     FuelExpenses = new List<FuelExpense>(),
     ServiceRecords = new List<ServiceRecord>(),
     Insurances = new List<Insurance>(),
-    CarTires = new List<CarTire>()
+    CarTires = new List<CarTire>(),
+    Expenses = new List<Expense>()
 };
 
 var tire3 = new Tire
@@ -260,14 +332,69 @@ var insurance3 = new Insurance
     Car = car3
 };
 
+var expense5 = new Expense
+{
+    Id = 8005,
+    Description = "Wheel alignment and suspension check",
+    Amount = 96m,
+    Date = new DateTime(2026, 1, 22),
+    CategoryId = maintenanceCategory.Id,
+    Category = maintenanceCategory
+};
+
+var expense6 = new Expense
+{
+    Id = 8006,
+    Description = "Annual EV registration renewal",
+    Amount = 290m,
+    Date = new DateTime(2026, 3, 3),
+    CategoryId = registrationCategory.Id,
+    Category = registrationCategory
+};
+
 car3.CarTires.Add(carTire3);
 tire3.CarTires.Add(carTire3);
 car3.FuelExpenses.Add(fuelExpense3);
 car3.ServiceRecords.Add(serviceRecord3);
 car3.Insurances.Add(insurance3);
+car3.Expenses.Add(expense5);
+car3.Expenses.Add(expense6);
+maintenanceCategory.Expenses.Add(expense5);
+registrationCategory.Expenses.Add(expense6);
 user3.Cars.Add(car3);
 
 var sampleUsers = new List<User> { user1, user2, user3 };
+
+var carTotalCosts = sampleUsers
+    .SelectMany(user => user.Cars)
+    .Select(car => new
+    {
+        CarName = $"{car.Brand} {car.Model}",
+        TotalCost =
+            (car.FuelExpenses?.Sum(fuel => fuel.TotalCost) ?? 0m) +
+            (car.ServiceRecords?.Sum(service => service.Cost) ?? 0m) +
+            (car.Insurances?.Sum(insurance => insurance.Price) ?? 0m) +
+            (car.Expenses?.Sum(expense => expense.Amount) ?? 0m) +
+            (car.CarTires?.Sum(carTire => carTire.Tire?.Price ?? 0m) ?? 0m)
+    })
+    .ToList();
+
+var thirtyDaysAgo = DateTime.Now.AddDays(-30);
+
+var recentFuelExpenses = sampleUsers
+    .SelectMany(user => user.Cars)
+    .SelectMany(car => car.FuelExpenses)
+    .Where(fuelExpense => fuelExpense.Date >= thirtyDaysAgo && fuelExpense.Date <= DateTime.Now)
+    .ToList();
+
+var targetBrand = "Toyota";
+
+var firstServiceRecordForBrand = sampleUsers
+    .SelectMany(user => user.Cars)
+    .Where(car => car.Brand.Equals(targetBrand, StringComparison.OrdinalIgnoreCase))
+    .SelectMany(car => car.ServiceRecords)
+    .OrderBy(serviceRecord => serviceRecord.Date)
+    .FirstOrDefault();
 
 var app = builder.Build();
 

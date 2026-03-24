@@ -23,4 +23,5 @@ public class Car
     public List<ServiceRecord> ServiceRecords { get; set; }
     public List<Insurance> Insurances { get; set; }
     public List<CarTire> CarTires { get; set; }
+    public List<Expense> Expenses { get; set; }
 }
