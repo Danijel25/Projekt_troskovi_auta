@@ -1,7 +1,12 @@
+using CarExpanses.Enums;
+using CarExpanses.Models;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+var app = builder.Build();
 
 var maintenanceCategory = new ExpenseCategory
 {
@@ -36,6 +41,8 @@ var user1 = new User
 var car1 = new Car
 {
     Id = 101,
+    UserId = user1.Id,
+    User = user1,
     Brand = "Volkswagen",
     Model = "Golf 7",
     Year = 2018,
@@ -73,11 +80,10 @@ var carTire1 = new CarTire
 var fuelExpense1 = new FuelExpense
 {
     Id = 5001,
-    Date = new DateTime(2026, 2, 15),
-    Liters = 47.3,
+    FuelExpenseDate = new DateTime(2026, 2, 15),
+    Liters = 47.3m,
     PricePerLiter = 1.49m,
-    TotalCost = 70.48m,
-    Milage = 123900,
+    Kilometars = 123900,
     CarId = car1.Id,
     Car = car1
 };
@@ -88,7 +94,7 @@ var serviceRecord1 = new ServiceRecord
     ServiceType = "Regular service",
     Description = "Oil and all filters replaced",
     Cost = 185m,
-    Date = new DateTime(2025, 11, 20),
+    ServiceDate = new DateTime(2025, 11, 20),
     Mileage = 121300,
     CarId = car1.Id,
     Car = car1
@@ -149,6 +155,8 @@ var user2 = new User
 var car2 = new Car
 {
     Id = 102,
+    UserId = user2.Id,
+    User = user2,
     Brand = "Toyota",
     Model = "Corolla Hybrid",
     Year = 2021,
@@ -186,11 +194,10 @@ var carTire2 = new CarTire
 var fuelExpense2 = new FuelExpense
 {
     Id = 5002,
-    Date = new DateTime(2026, 2, 21),
-    Liters = 35.8,
+    FuelExpenseDate = new DateTime(2026, 2, 21),
+    Liters = 35.8m,
     PricePerLiter = 1.53m,
-    TotalCost = 54.77m,
-    Milage = 67810,
+    Kilometars = 67810,
     CarId = car2.Id,
     Car = car2
 };
@@ -201,7 +208,7 @@ var serviceRecord2 = new ServiceRecord
     ServiceType = "Brake service",
     Description = "Front brake pads replaced",
     Cost = 240m,
-    Date = new DateTime(2025, 10, 2),
+    ServiceDate = new DateTime(2025, 10, 2),
     Mileage = 65200,
     CarId = car2.Id,
     Car = car2
@@ -262,6 +269,8 @@ var user3 = new User
 var car3 = new Car
 {
     Id = 103,
+    UserId = user3.Id,
+    User = user3,
     Brand = "Tesla",
     Model = "Model 3",
     Year = 2022,
@@ -299,11 +308,10 @@ var carTire3 = new CarTire
 var fuelExpense3 = new FuelExpense
 {
     Id = 5003,
-    Date = new DateTime(2026, 3, 1),
-    Liters = 0,
-    PricePerLiter = 0,
-    TotalCost = 18.40m,
-    Milage = 40900,
+    FuelExpenseDate = new DateTime(2026, 3, 1),
+    Liters = 10m,
+    PricePerLiter = 1.5m,
+    Kilometars = 40900,
     CarId = car3.Id,
     Car = car3
 };
@@ -314,7 +322,7 @@ var serviceRecord3 = new ServiceRecord
     ServiceType = "Tire rotation",
     Description = "Tires rotated and balanced",
     Cost = 70m,
-    Date = new DateTime(2025, 12, 8),
+    ServiceDate = new DateTime(2025, 12, 8),
     Mileage = 39500,
     CarId = car3.Id,
     Car = car3
@@ -377,15 +385,28 @@ var carTotalCosts = sampleUsers
             (car.Expenses?.Sum(expense => expense.Amount) ?? 0m) +
             (car.CarTires?.Sum(carTire => carTire.Tire?.Price ?? 0m) ?? 0m)
     })
+    .OrderByDescending(carCost => carCost.TotalCost)
     .ToList();
+
+Console.WriteLine("Total costs per car:");
+foreach (var carCost in carTotalCosts)
+{
+    Console.WriteLine($"{carCost.CarName}: {carCost.TotalCost:C}");
+}
 
 var thirtyDaysAgo = DateTime.Now.AddDays(-30);
 
 var recentFuelExpenses = sampleUsers
     .SelectMany(user => user.Cars)
     .SelectMany(car => car.FuelExpenses)
-    .Where(fuelExpense => fuelExpense.Date >= thirtyDaysAgo && fuelExpense.Date <= DateTime.Now)
+    .Where(fuelExpense => fuelExpense.FuelExpenseDate >= thirtyDaysAgo && fuelExpense.FuelExpenseDate <= DateTime.Now)
     .ToList();
+
+Console.WriteLine("\nFuel expenses in the last 30 days:");
+foreach (var fuelExpense in recentFuelExpenses)
+{
+    Console.WriteLine($"{fuelExpense.Car.Brand} {fuelExpense.Car.Model} - {fuelExpense.FuelExpenseDate.ToShortDateString()}: {fuelExpense.TotalCost:C}");
+}
 
 var targetBrand = "Toyota";
 
@@ -393,10 +414,12 @@ var firstServiceRecordForBrand = sampleUsers
     .SelectMany(user => user.Cars)
     .Where(car => car.Brand.Equals(targetBrand, StringComparison.OrdinalIgnoreCase))
     .SelectMany(car => car.ServiceRecords)
-    .OrderBy(serviceRecord => serviceRecord.Date)
+    .OrderBy(serviceRecord => serviceRecord.ServiceDate)
     .FirstOrDefault();
 
-var app = builder.Build();
+Console.WriteLine($"\nFirst service record for brand '{targetBrand}':");
+Console.WriteLine($"{firstServiceRecordForBrand.Car.Brand} {firstServiceRecordForBrand.Car.Model} - {firstServiceRecordForBrand.ServiceType} on {firstServiceRecordForBrand.ServiceDate.ToShortDateString()} costing {firstServiceRecordForBrand.Cost:C}");
+
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
