@@ -1,14 +1,20 @@
 using CarExpanses.Models;
+using CarExpanses.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
 namespace CarExpanses.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController(CarMockRepository carRepository) : Controller
     {
         public IActionResult Index()
         {
-            return View();
+            var cars = carRepository
+                .GetAll()
+                .OrderByDescending(car => car.Expenses?.Sum(expense => expense.Amount) ?? 0m)
+                .ToList();
+
+            return View(cars);
         }
 
         public IActionResult Privacy()

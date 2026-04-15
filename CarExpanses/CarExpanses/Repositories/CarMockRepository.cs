@@ -5,9 +5,18 @@ namespace CarExpanses.Repositories;
 
 public sealed class CarMockRepository
 {
-    private readonly List<Car> _cars =
-    [
-        new Car
+    private readonly List<Car> _cars;
+
+    public CarMockRepository()
+    {
+        var fuelExpenseRepository = new FuelExpenseMockRepository();
+        var serviceRecordRepository = new ServiceRecordMockRepository();
+        var insuranceRepository = new InsuranceMockRepository();
+        var carTireRepository = new CarTireMockRepository();
+        var tireRepository = new TireMockRepository();
+        var expenseRepository = new ExpenseMockRepository();
+
+        var car1 = new Car
         {
             Id = 101,
             UserId = 1,
@@ -24,8 +33,9 @@ public sealed class CarMockRepository
             Insurances = new List<Insurance>(),
             CarTires = new List<CarTire>(),
             Expenses = new List<Expense>()
-        },
-        new Car
+        };
+
+        var car2 = new Car
         {
             Id = 102,
             UserId = 2,
@@ -42,8 +52,9 @@ public sealed class CarMockRepository
             Insurances = new List<Insurance>(),
             CarTires = new List<CarTire>(),
             Expenses = new List<Expense>()
-        },
-        new Car
+        };
+
+        var car3 = new Car
         {
             Id = 103,
             UserId = 3,
@@ -60,8 +71,30 @@ public sealed class CarMockRepository
             Insurances = new List<Insurance>(),
             CarTires = new List<CarTire>(),
             Expenses = new List<Expense>()
-        }
-    ];
+        };
+
+        var tiresById = tireRepository.GetAll().ToDictionary(tire => tire.Id);
+
+        car1.FuelExpenses = fuelExpenseRepository.GetAll().Where(expense => expense.CarId == car1.Id).ToList();
+        car1.ServiceRecords = serviceRecordRepository.GetAll().Where(record => record.CarId == car1.Id).ToList();
+        car1.Insurances = insuranceRepository.GetAll().Where(insurance => insurance.CarId == car1.Id).ToList();
+        car1.CarTires = carTireRepository.GetAll().Where(carTire => carTire.CarId == car1.Id).ToList();
+        car1.Expenses = expenseRepository.GetAll().Take(2).ToList();
+
+        car2.FuelExpenses = fuelExpenseRepository.GetAll().Where(expense => expense.CarId == car2.Id).ToList();
+        car2.ServiceRecords = serviceRecordRepository.GetAll().Where(record => record.CarId == car2.Id).ToList();
+        car2.Insurances = insuranceRepository.GetAll().Where(insurance => insurance.CarId == car2.Id).ToList();
+        car2.CarTires = carTireRepository.GetAll().Where(carTire => carTire.CarId == car2.Id).ToList();
+        car2.Expenses = expenseRepository.GetAll().Skip(2).Take(2).ToList();
+
+        car3.FuelExpenses = fuelExpenseRepository.GetAll().Where(expense => expense.CarId == car3.Id).ToList();
+        car3.ServiceRecords = serviceRecordRepository.GetAll().Where(record => record.CarId == car3.Id).ToList();
+        car3.Insurances = insuranceRepository.GetAll().Where(insurance => insurance.CarId == car3.Id).ToList();
+        car3.CarTires = carTireRepository.GetAll().Where(carTire => carTire.CarId == car3.Id).ToList();
+        car3.Expenses = expenseRepository.GetAll().Skip(4).Take(2).ToList();
+
+        _cars = new List<Car> { car1, car2, car3 };
+    }
 
     public IReadOnlyList<Car> GetAll() => _cars;
 

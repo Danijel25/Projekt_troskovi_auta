@@ -1,8 +1,68 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model IReadOnlyList<Car>
+
+@{
+    ViewData["Title"] = "Fleet Dashboard";
+    var fleetExpenseTotal = Model.Sum(car => car.Expenses?.Sum(expense => expense.Amount) ?? 0m);
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="auto-page-container auto-home">
+    <header class="auto-page-header auto-stagger-item" style="animation-delay: 0.08s;">
+        <p class="auto-kicker">Financial Snapshot</p>
+        <h1 class="auto-hero-title">Fleet Expenses Board</h1>
+    </header>
+
+    <section class="auto-dashboard-summary auto-stagger-item" style="animation-delay: 0.16s;" aria-label="Fleet expense summary">
+        <div class="auto-summary-content">
+            <p class="auto-stats-label">Total Spent In Expenses</p>
+            <p class="auto-total-value">@fleetExpenseTotal.ToString("C")</p>
+            <p class="auto-fleet-size">Tracking <span class="auto-chip">@Model.Count cars</span> across your garage.</p>
+        </div>
+        <div class="auto-summary-decoration" aria-hidden="true"></div>
+    </section>
+
+    @if (Model.Any())
+    {
+        <section class="auto-grid auto-home-grid" aria-label="Cars and expenses">
+            @{ var delay = 0.24; }
+            @foreach (var car in Model)
+            {
+                var carExpenseTotal = car.Expenses?.Sum(expense => expense.Amount) ?? 0m;
+                var carExpenseCount = car.Expenses?.Count ?? 0;
+
+                <article class="auto-card auto-stagger-item" style="animation-delay: @(delay.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))s;" aria-label="@car.Brand @car.Model expenses">
+                    <span class="auto-card-badge">@car.Year</span>
+                    <div class="auto-card-content">
+                        <h2 class="auto-card-title"><span>#@car.Id</span> @car.Brand @car.Model</h2>
+                        <dl class="auto-stats">
+                            <dt>Fuel</dt>
+                            <dd>@car.FuelType</dd>
+
+                            <dt>Mileage</dt>
+                            <dd>@car.CurrentMilage.ToString("N0") km</dd>
+
+                            <dt>Entries</dt>
+                            <dd>@carExpenseCount expenses</dd>
+
+                            <dt>Total</dt>
+                            <dd class="auto-cost-value">@carExpenseTotal.ToString("C")</dd>
+                        </dl>
+                    </div>
+                    <div class="auto-card-actions">
+                        <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id" class="auto-btn auto-btn-primary auto-home-btn">
+                            Open Car Details
+                        </a>
+                    </div>
+                </article>
+                delay += 0.08;
+            }
+        </section>
+    }
+    else
+    {
+        <section class="auto-empty-fleet auto-stagger-item" style="animation-delay: 0.24s;">
+            <h2>No Cars Yet</h2>
+            <p>There are no cars in the fleet right now. Add one from the cars page to start tracking expenses.</p>
+            <a asp-controller="Cars" asp-action="Index" class="auto-btn auto-btn-primary">Go To Cars</a>
+        </section>
+    }
 </div>

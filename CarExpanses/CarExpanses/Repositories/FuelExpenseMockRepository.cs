@@ -4,9 +4,11 @@ namespace CarExpanses.Repositories;
 
 public sealed class FuelExpenseMockRepository
 {
-    private readonly List<FuelExpense> _fuelExpenses =
-    [
-        new FuelExpense
+    private readonly List<FuelExpense> _fuelExpenses;
+
+    public FuelExpenseMockRepository()
+    {
+        var fuelExpense1 = new FuelExpense
         {
             Id = 5001,
             FuelExpenseDate = new DateTime(2026, 2, 15),
@@ -14,8 +16,9 @@ public sealed class FuelExpenseMockRepository
             PricePerLiter = 1.49m,
             Kilometars = 123900,
             CarId = 101
-        },
-        new FuelExpense
+        };
+
+        var fuelExpense2 = new FuelExpense
         {
             Id = 5002,
             FuelExpenseDate = new DateTime(2026, 2, 21),
@@ -23,8 +26,9 @@ public sealed class FuelExpenseMockRepository
             PricePerLiter = 1.53m,
             Kilometars = 67810,
             CarId = 102
-        },
-        new FuelExpense
+        };
+
+        var fuelExpense3 = new FuelExpense
         {
             Id = 5003,
             FuelExpenseDate = new DateTime(2026, 3, 1),
@@ -32,8 +36,10 @@ public sealed class FuelExpenseMockRepository
             PricePerLiter = 1.5m,
             Kilometars = 40900,
             CarId = 103
-        }
-    ];
+        };
+
+        _fuelExpenses = new List<FuelExpense> { fuelExpense1, fuelExpense2, fuelExpense3 };
+    }
 
     public IReadOnlyList<FuelExpense> GetAll() => _fuelExpenses;
 

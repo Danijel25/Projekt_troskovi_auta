@@ -4,9 +4,11 @@ namespace CarExpanses.Repositories;
 
 public sealed class ServiceRecordMockRepository
 {
-    private readonly List<ServiceRecord> _serviceRecords =
-    [
-        new ServiceRecord
+    private readonly List<ServiceRecord> _serviceRecords;
+
+    public ServiceRecordMockRepository()
+    {
+        var serviceRecord1 = new ServiceRecord
         {
             Id = 6001,
             ServiceType = "Regular service",
@@ -15,8 +17,9 @@ public sealed class ServiceRecordMockRepository
             ServiceDate = new DateTime(2025, 11, 20),
             Mileage = 121300,
             CarId = 101
-        },
-        new ServiceRecord
+        };
+
+        var serviceRecord2 = new ServiceRecord
         {
             Id = 6002,
             ServiceType = "Brake service",
@@ -25,8 +28,9 @@ public sealed class ServiceRecordMockRepository
             ServiceDate = new DateTime(2025, 10, 2),
             Mileage = 65200,
             CarId = 102
-        },
-        new ServiceRecord
+        };
+
+        var serviceRecord3 = new ServiceRecord
         {
             Id = 6003,
             ServiceType = "Tire rotation",
@@ -35,8 +39,10 @@ public sealed class ServiceRecordMockRepository
             ServiceDate = new DateTime(2025, 12, 8),
             Mileage = 39500,
             CarId = 103
-        }
-    ];
+        };
+
+        _serviceRecords = new List<ServiceRecord> { serviceRecord1, serviceRecord2, serviceRecord3 };
+    }
 
     public IReadOnlyList<ServiceRecord> GetAll() => _serviceRecords;
 

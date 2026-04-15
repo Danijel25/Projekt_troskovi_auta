@@ -4,9 +4,11 @@ namespace CarExpanses.Repositories;
 
 public sealed class InsuranceMockRepository
 {
-    private readonly List<Insurance> _insurances =
-    [
-        new Insurance
+    private readonly List<Insurance> _insurances;
+
+    public InsuranceMockRepository()
+    {
+        var insurance1 = new Insurance
         {
             Id = 7001,
             Company = "Croatia Osiguranje",
@@ -15,8 +17,9 @@ public sealed class InsuranceMockRepository
             StartDate = new DateTime(2026, 1, 1),
             EndDate = new DateTime(2026, 12, 31),
             CarId = 101
-        },
-        new Insurance
+        };
+
+        var insurance2 = new Insurance
         {
             Id = 7002,
             Company = "Allianz",
@@ -25,8 +28,9 @@ public sealed class InsuranceMockRepository
             StartDate = new DateTime(2026, 2, 1),
             EndDate = new DateTime(2027, 1, 31),
             CarId = 102
-        },
-        new Insurance
+        };
+
+        var insurance3 = new Insurance
         {
             Id = 7003,
             Company = "Wiener",
@@ -35,8 +39,10 @@ public sealed class InsuranceMockRepository
             StartDate = new DateTime(2026, 3, 1),
             EndDate = new DateTime(2027, 2, 28),
             CarId = 103
-        }
-    ];
+        };
+
+        _insurances = new List<Insurance> { insurance1, insurance2, insurance3 };
+    }
 
     public IReadOnlyList<Insurance> GetAll() => _insurances;
 
