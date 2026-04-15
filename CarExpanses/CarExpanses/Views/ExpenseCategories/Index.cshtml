@@ -1,0 +1,32 @@
+@model IReadOnlyList<ExpenseCategory>
+@{
+    ViewData["Title"] = "Expense Categories";
+}
+
+<main class="auto-page-container">
+    <header class="auto-page-header">
+        <p class="auto-kicker">Ledger groups</p>
+        <h1 class="auto-title">Expense Categories</h1>
+    </header>
+
+    <section class="auto-grid" aria-label="Expense categories list">
+        @foreach (var item in Model)
+        {
+            <article class="auto-card">
+                <div class="auto-card-badge">#@item.Id</div>
+                <div class="auto-card-content">
+                    <h2 class="auto-card-title">@item.Name <span>Category</span></h2>
+                    <dl class="auto-stats">
+                        <dt>Expenses</dt>
+                        <dd>@(item.Expenses?.Count ?? 0)</dd>
+                        <dt>Identifier</dt>
+                        <dd>@item.Id</dd>
+                    </dl>
+                </div>
+                <footer class="auto-card-actions">
+                    <a asp-action="Details" asp-route-id="@item.Id" class="auto-btn auto-btn-primary" aria-label="View expense category @item.Name">Details</a>
+                </footer>
+            </article>
+        }
+    </section>
+</main>

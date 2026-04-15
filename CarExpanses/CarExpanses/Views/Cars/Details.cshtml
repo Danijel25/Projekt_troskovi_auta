@@ -1,0 +1,210 @@
+@model Car
+@{
+    ViewData["Title"] = "Car Details";
+    var fuelExpenses = Model.FuelExpenses ?? new List<FuelExpense>();
+    var serviceRecords = Model.ServiceRecords ?? new List<ServiceRecord>();
+    var insurances = Model.Insurances ?? new List<Insurance>();
+    var carTires = Model.CarTires ?? new List<CarTire>();
+    var expenses = Model.Expenses ?? new List<Expense>();
+}
+
+<main class="auto-page-container">
+    <nav class="auto-breadcrumb" aria-label="Back navigation">
+        <a asp-controller="Cars" asp-action="Index" class="auto-btn auto-btn-ghost">Back to Garage</a>
+    </nav>
+
+    <article class="auto-details-hero">
+        <header class="auto-details-header">
+            <div>
+                <p class="auto-kicker">Selected vehicle</p>
+                <h1 class="auto-hero-title">@Model.Brand @Model.Model</h1>
+            </div>
+            <span class="auto-hero-tag">@Model.Year</span>
+        </header>
+
+        <div class="auto-details-body">
+            <section class="auto-data-panel" aria-label="Vehicle specifications">
+                <h2 class="auto-panel-heading">Vehicle Specs</h2>
+                <ul class="auto-data-list">
+                    <li><strong>ID:</strong> @Model.Id</li>
+                    <li><strong>User ID:</strong> @Model.UserId</li>
+                    <li><strong>Fuel Type:</strong> @Model.FuelType</li>
+                    <li><strong>Engine Volume:</strong> @Model.EngineVolume L</li>
+                    <li><strong>Current Mileage:</strong> @Model.CurrentMilage km</li>
+                    <li><strong>Purchase Price:</strong> @Model.PurchasePrice.ToString("C")</li>
+                    <li><strong>Purchase Date:</strong> @Model.PurchaseDate.ToString("yyyy-MM-dd")</li>
+                </ul>
+            </section>
+
+            <aside class="auto-action-panel" aria-label="Quick actions">
+                <h3 class="auto-panel-heading">Actions</h3>
+                <a asp-controller="Cars" asp-action="Index" class="auto-btn auto-btn-secondary">View All Cars</a>
+                <a asp-controller="Cars" asp-action="Details" asp-route-id="@Model.Id" class="auto-btn auto-btn-primary">Refresh Details</a>
+            </aside>
+        </div>
+
+        <section class="auto-related-section" aria-label="Related records">
+            <h2 class="auto-panel-heading">Related Records</h2>
+
+            <div class="auto-related-grid" aria-label="Related car records dashboard">
+                <section class="auto-log-card" aria-labelledby="heading-fuel-expenses">
+                    <header class="auto-card-header">
+                        <h3 id="heading-fuel-expenses">Fuel Expenses</h3>
+                        <span class="auto-chip" aria-label="@fuelExpenses.Count total fuel expenses">@fuelExpenses.Count</span>
+                    </header>
+                    <div class="auto-card-body">
+                        @if (!fuelExpenses.Any())
+                        {
+                            <p class="auto-empty-state">No fuel expenses recorded yet.</p>
+                        }
+                        else
+                        {
+                            <ul class="auto-compact-list" role="list">
+                                @foreach (var fuel in fuelExpenses.OrderByDescending(f => f.FuelExpenseDate).Take(5))
+                                {
+                                    <li class="auto-list-item">
+                                        <div class="auto-item-primary">
+                                            <span class="auto-date">@fuel.FuelExpenseDate.ToString("yyyy-MM-dd")</span>
+                                            <strong>@fuel.TotalCost.ToString("C")</strong>
+                                        </div>
+                                        <div class="auto-item-secondary">
+                                            <span>@fuel.Liters L</span>
+                                            <span class="auto-dot-separator" aria-hidden="true">•</span>
+                                            <span>@fuel.Kilometars km</span>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </section>
+
+                <section class="auto-log-card" aria-labelledby="heading-service-records">
+                    <header class="auto-card-header">
+                        <h3 id="heading-service-records">Service Records</h3>
+                        <span class="auto-chip" aria-label="@serviceRecords.Count total service records">@serviceRecords.Count</span>
+                    </header>
+                    <div class="auto-card-body">
+                        @if (!serviceRecords.Any())
+                        {
+                            <p class="auto-empty-state">No service records found.</p>
+                        }
+                        else
+                        {
+                            <ul class="auto-compact-list" role="list">
+                                @foreach (var service in serviceRecords.OrderByDescending(s => s.ServiceDate).Take(5))
+                                {
+                                    <li class="auto-list-item">
+                                        <div class="auto-item-primary">
+                                            <span class="auto-date">@service.ServiceDate.ToString("yyyy-MM-dd")</span>
+                                            <strong>@service.ServiceType</strong>
+                                        </div>
+                                        <div class="auto-item-secondary">
+                                            <span>@service.Cost.ToString("C")</span>
+                                            <span class="auto-dot-separator" aria-hidden="true">•</span>
+                                            <span>@service.Mileage km</span>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </section>
+
+                <section class="auto-log-card" aria-labelledby="heading-insurances">
+                    <header class="auto-card-header">
+                        <h3 id="heading-insurances">Insurances</h3>
+                        <span class="auto-chip" aria-label="@insurances.Count total insurance policies">@insurances.Count</span>
+                    </header>
+                    <div class="auto-card-body">
+                        @if (!insurances.Any())
+                        {
+                            <p class="auto-empty-state">No insurance policies added.</p>
+                        }
+                        else
+                        {
+                            <ul class="auto-compact-list" role="list">
+                                @foreach (var insurance in insurances.OrderByDescending(i => i.EndDate).Take(5))
+                                {
+                                    <li class="auto-list-item">
+                                        <div class="auto-item-primary">
+                                            <span>@insurance.Company</span>
+                                            <strong>@insurance.Price.ToString("C")</strong>
+                                        </div>
+                                        <div class="auto-item-secondary">
+                                            <span>@insurance.InsuranceType</span>
+                                            <span class="auto-dot-separator" aria-hidden="true">•</span>
+                                            <span>Ends @insurance.EndDate.ToString("yyyy-MM-dd")</span>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </section>
+
+                <section class="auto-log-card" aria-labelledby="heading-car-tires">
+                    <header class="auto-card-header">
+                        <h3 id="heading-car-tires">Car Tires</h3>
+                        <span class="auto-chip" aria-label="@carTires.Count total tire assignments">@carTires.Count</span>
+                    </header>
+                    <div class="auto-card-body">
+                        @if (!carTires.Any())
+                        {
+                            <p class="auto-empty-state">No tire sets assigned.</p>
+                        }
+                        else
+                        {
+                            <ul class="auto-compact-list" role="list">
+                                @foreach (var carTire in carTires.OrderByDescending(t => t.InstalledDate).Take(5))
+                                {
+                                    <li class="auto-list-item">
+                                        <div class="auto-item-primary">
+                                            <span>@(carTire.Tire?.Brand ?? "Unknown Brand") @(carTire.Tire?.Model ?? "")</span>
+                                            <strong>@(carTire.Tire?.Season ?? "N/A")</strong>
+                                        </div>
+                                        <div class="auto-item-secondary">
+                                            <span>Installed @carTire.InstalledDate.ToString("yyyy-MM-dd")</span>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </section>
+
+                <section class="auto-log-card" aria-labelledby="heading-expenses">
+                    <header class="auto-card-header">
+                        <h3 id="heading-expenses">Expenses</h3>
+                        <span class="auto-chip" aria-label="@expenses.Count total expenses">@expenses.Count</span>
+                    </header>
+                    <div class="auto-card-body">
+                        @if (!expenses.Any())
+                        {
+                            <p class="auto-empty-state">No additional expenses logged.</p>
+                        }
+                        else
+                        {
+                            <ul class="auto-compact-list" role="list">
+                                @foreach (var expense in expenses.OrderByDescending(e => e.Date).Take(5))
+                                {
+                                    <li class="auto-list-item">
+                                        <div class="auto-item-primary">
+                                            <span class="auto-date">@expense.Date.ToString("yyyy-MM-dd")</span>
+                                            <strong>@expense.Amount.ToString("C")</strong>
+                                        </div>
+                                        <div class="auto-item-secondary">
+                                            <span>@expense.Description</span>
+                                            <span class="auto-dot-separator" aria-hidden="true">•</span>
+                                            <span>@(expense.Category?.Name ?? "No Category")</span>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </section>
+            </div>
+        </section>
+    </article>
+</main>

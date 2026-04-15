@@ -1,0 +1,39 @@
+@model IReadOnlyList<Car>
+@{
+    ViewData["Title"] = "My Garage";
+}
+
+<main class="auto-page-container">
+    <header class="auto-page-header">
+        <div>
+            <p class="auto-kicker">Vehicle archive</p>
+            <h1 class="auto-title">My Garage</h1>
+        </div>
+    </header>
+
+    <section class="auto-grid" aria-label="Cars list">
+        @foreach (var car in Model)
+        {
+            <article class="auto-card">
+                <div class="auto-card-badge">@car.Year</div>
+                <div class="auto-card-content">
+                    <h2 class="auto-card-title">@car.Brand <span>@car.Model</span></h2>
+                    <dl class="auto-stats">
+                        <dt>Fuel</dt>
+                        <dd>@car.FuelType</dd>
+                        <dt>Engine</dt>
+                        <dd>@car.EngineVolume L</dd>
+                        <dt>Mileage</dt>
+                        <dd>@car.CurrentMilage km</dd>
+                    </dl>
+                </div>
+                <footer class="auto-card-actions">
+                    <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id" class="auto-btn auto-btn-primary"
+                       aria-label="View details for @car.Brand @car.Model">
+                        Details
+                    </a>
+                </footer>
+            </article>
+        }
+    </section>
+</main>

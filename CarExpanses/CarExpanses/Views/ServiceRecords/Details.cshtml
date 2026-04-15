@@ -1,0 +1,35 @@
+@model ServiceRecord
+@{
+    ViewData["Title"] = "Service Record Details";
+}
+
+<main class="auto-page-container">
+    <nav class="auto-breadcrumb"><a asp-action="Index" class="auto-btn auto-btn-ghost">Back to Service Records</a></nav>
+    <article class="auto-details-hero">
+        <header class="auto-details-header">
+            <div>
+                <p class="auto-kicker">Service report</p>
+                <h1 class="auto-hero-title">@Model.ServiceType</h1>
+            </div>
+            <span class="auto-hero-tag">ID @Model.Id</span>
+        </header>
+        <div class="auto-details-body">
+            <section class="auto-data-panel">
+                <h2 class="auto-panel-heading">Record Details</h2>
+                <ul class="auto-data-list">
+                    <li><strong>Id:</strong> @Model.Id</li>
+                    <li><strong>Car Id:</strong> @Model.CarId</li>
+                    <li><strong>Service Type:</strong> @Model.ServiceType</li>
+                    <li><strong>Description:</strong> @Model.Description</li>
+                    <li><strong>Cost:</strong> @Model.Cost.ToString("C")</li>
+                    <li><strong>Service Date:</strong> @Model.ServiceDate.ToString("yyyy-MM-dd")</li>
+                    <li><strong>Mileage:</strong> @Model.Mileage</li>
+                </ul>
+            </section>
+            <aside class="auto-action-panel">
+                <h3 class="auto-panel-heading">Actions</h3>
+                <a asp-action="Index" class="auto-btn auto-btn-secondary">View All Service Records</a>
+            </aside>
+        </div>
+    </article>
+</main>

@@ -1,0 +1,35 @@
+@model FuelExpense
+@{
+    ViewData["Title"] = "Fuel Expense Details";
+}
+
+<main class="auto-page-container">
+    <nav class="auto-breadcrumb"><a asp-action="Index" class="auto-btn auto-btn-ghost">Back to Fuel Expenses</a></nav>
+    <article class="auto-details-hero">
+        <header class="auto-details-header">
+            <div>
+                <p class="auto-kicker">Fuel event</p>
+                <h1 class="auto-hero-title">Expense #@Model.Id</h1>
+            </div>
+            <span class="auto-hero-tag">Car @Model.CarId</span>
+        </header>
+        <div class="auto-details-body">
+            <section class="auto-data-panel">
+                <h2 class="auto-panel-heading">Expense Details</h2>
+                <ul class="auto-data-list">
+                    <li><strong>Id:</strong> @Model.Id</li>
+                    <li><strong>Car Id:</strong> @Model.CarId</li>
+                    <li><strong>Date:</strong> @Model.FuelExpenseDate.ToString("yyyy-MM-dd")</li>
+                    <li><strong>Liters:</strong> @Model.Liters</li>
+                    <li><strong>Price per Liter:</strong> @Model.PricePerLiter.ToString("C")</li>
+                    <li><strong>Total Cost:</strong> @Model.TotalCost.ToString("C")</li>
+                    <li><strong>Kilometers:</strong> @Model.Kilometars</li>
+                </ul>
+            </section>
+            <aside class="auto-action-panel">
+                <h3 class="auto-panel-heading">Actions</h3>
+                <a asp-action="Index" class="auto-btn auto-btn-secondary">View All Fuel Expenses</a>
+            </aside>
+        </div>
+    </article>
+</main>

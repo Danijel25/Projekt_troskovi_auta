@@ -1,0 +1,32 @@
+@model IReadOnlyList<User>
+@{
+    ViewData["Title"] = "Users";
+}
+
+<main class="auto-page-container">
+    <header class="auto-page-header">
+        <p class="auto-kicker">Driver profiles</p>
+        <h1 class="auto-title">Users</h1>
+    </header>
+
+    <section class="auto-grid" aria-label="Users list">
+        @foreach (var user in Model)
+        {
+            <article class="auto-card">
+                <div class="auto-card-badge">#@user.Id</div>
+                <div class="auto-card-content">
+                    <h2 class="auto-card-title">@user.Username <span>Profile</span></h2>
+                    <dl class="auto-stats">
+                        <dt>Email</dt>
+                        <dd>@user.Email</dd>
+                        <dt>Cars</dt>
+                        <dd>@(user.Cars?.Count ?? 0)</dd>
+                    </dl>
+                </div>
+                <footer class="auto-card-actions">
+                    <a asp-action="Details" asp-route-id="@user.Id" class="auto-btn auto-btn-primary" aria-label="View details for @user.Username">Details</a>
+                </footer>
+            </article>
+        }
+    </section>
+</main>

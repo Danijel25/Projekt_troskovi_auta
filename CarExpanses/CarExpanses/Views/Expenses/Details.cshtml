@@ -1,0 +1,34 @@
+@model Expense
+@{
+    ViewData["Title"] = "Expense Details";
+}
+
+<main class="auto-page-container">
+    <nav class="auto-breadcrumb"><a asp-action="Index" class="auto-btn auto-btn-ghost">Back to Expenses</a></nav>
+    <article class="auto-details-hero">
+        <header class="auto-details-header">
+            <div>
+                <p class="auto-kicker">Expense entry</p>
+                <h1 class="auto-hero-title">@Model.Amount.ToString("C")</h1>
+            </div>
+            <span class="auto-hero-tag">ID @Model.Id</span>
+        </header>
+        <div class="auto-details-body">
+            <section class="auto-data-panel">
+                <h2 class="auto-panel-heading">Expense Details</h2>
+                <ul class="auto-data-list">
+                    <li><strong>Id:</strong> @Model.Id</li>
+                    <li><strong>Description:</strong> @Model.Description</li>
+                    <li><strong>Amount:</strong> @Model.Amount.ToString("C")</li>
+                    <li><strong>Date:</strong> @Model.Date.ToString("yyyy-MM-dd")</li>
+                    <li><strong>Category Id:</strong> @Model.CategoryId</li>
+                    <li><strong>Category:</strong> @Model.Category.Name</li>
+                </ul>
+            </section>
+            <aside class="auto-action-panel">
+                <h3 class="auto-panel-heading">Actions</h3>
+                <a asp-action="Index" class="auto-btn auto-btn-secondary">View All Expenses</a>
+            </aside>
+        </div>
+    </article>
+</main>

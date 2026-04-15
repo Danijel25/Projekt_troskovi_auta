@@ -1,0 +1,33 @@
+@model User
+@{
+    ViewData["Title"] = "User Details";
+}
+
+<main class="auto-page-container">
+    <nav class="auto-breadcrumb"><a asp-action="Index" class="auto-btn auto-btn-ghost">Back to Users</a></nav>
+    <article class="auto-details-hero">
+        <header class="auto-details-header">
+            <div>
+                <p class="auto-kicker">Driver profile</p>
+                <h1 class="auto-hero-title">@Model.Username</h1>
+            </div>
+            <span class="auto-hero-tag">ID @Model.Id</span>
+        </header>
+        <div class="auto-details-body">
+            <section class="auto-data-panel">
+                <h2 class="auto-panel-heading">Profile Details</h2>
+                <ul class="auto-data-list">
+                    <li><strong>Id:</strong> @Model.Id</li>
+                    <li><strong>Username:</strong> @Model.Username</li>
+                    <li><strong>Email:</strong> @Model.Email</li>
+                    <li><strong>Password:</strong> @Model.Password</li>
+                    <li><strong>Total Cars:</strong> @(Model.Cars?.Count ?? 0)</li>
+                </ul>
+            </section>
+            <aside class="auto-action-panel">
+                <h3 class="auto-panel-heading">Actions</h3>
+                <a asp-action="Index" class="auto-btn auto-btn-secondary">View All Users</a>
+            </aside>
+        </div>
+    </article>
+</main>
