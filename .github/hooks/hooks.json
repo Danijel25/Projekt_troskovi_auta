@@ -3,13 +3,13 @@
     "UserPromptSubmit": [
       {
         "type": "command",
-        "command": "powershell.exe -ExecutionPolicy Bypass -Command \"Add-Content -Path 'C:\\Users\\DK\\source\\repos\\Projekt_troskovi_auta\\lab-1\\agent_log.txt' -Value ([Console]::In.ReadToEnd())\""
+        "command": "powershell.exe -ExecutionPolicy Bypass -Command \"Add-Content -Path 'C:\\Users\\dkrizmani\\source\\repos\\Projekt_troskovi_auta\\lab-1\\agent_log.txt' -Value ([Console]::In.ReadToEnd())\""
       }
     ],
     "preToolUse": [
       {
         "type": "command",
-        "command": "powershell.exe -ExecutionPolicy Bypass -Command \"Add-Content -Path 'C:\\Users\\DK\\source\\repos\\Projekt_troskovi_auta\\lab-1\\agent_log.txt' -Value ([Console]::In.ReadToEnd())\""
+        "command": "powershell.exe -ExecutionPolicy Bypass -Command \"Add-Content -Path 'C:\\Users\\dkrizmani\\source\\repos\\Projekt_troskovi_auta\\lab-1\\agent_log.txt' -Value ([Console]::In.ReadToEnd())\""
       }
     ]
   }

@@ -1,3 +1,5 @@
 <Solution>
-  <Project Path="CarExpanses/CarExpanses.csproj" />
+  <Project Path="CarExpenses.Web/CarExpenses.Web.csproj" />
+  <Project Path="CarExpenses.Model/CarExpenses.Model.csproj" />
+  <Project Path="CarExpenses.DAL/CarExpenses.DAL.csproj" />
 </Solution>
