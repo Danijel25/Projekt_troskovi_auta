@@ -1,0 +1,45 @@
+@model CarExpenses.Model.Models.Car
+@{
+    ViewData["Title"] = "Delete Vehicle";
+}
+
+<main class="auto-page-container">
+    <nav class="auto-breadcrumb" aria-label="Back navigation">
+        <a asp-controller="Cars" asp-action="Index" class="auto-btn auto-btn-ghost">Back to Garage</a>
+    </nav>
+
+    <article class="auto-details-hero auto-card-danger">
+        <header class="auto-details-header auto-details-header-danger">
+            <div>
+                <p class="auto-kicker">Destructive action</p>
+                <h1 class="auto-hero-title">Delete @Model.Brand @Model.Model?</h1>
+            </div>
+            <span class="auto-hero-tag">@Model.Year</span>
+        </header>
+
+        <div class="auto-details-body auto-delete-body">
+            <section class="auto-data-panel">
+                <h2 class="auto-panel-heading">Vehicle Summary</h2>
+                <dl class="auto-stats auto-stats-compact">
+                    <dt>Fuel</dt>
+                    <dd>@Model.FuelType</dd>
+                    <dt>Engine</dt>
+                    <dd>@Model.EngineVolume L</dd>
+                    <dt>Mileage</dt>
+                    <dd>@Model.CurrentMilage km</dd>
+                    <dt>Purchase</dt>
+                    <dd>@Model.PurchaseDate.ToString("yyyy-MM-dd")</dd>
+                </dl>
+            </section>
+
+            <aside class="auto-action-panel auto-danger-panel">
+                <h3 class="auto-panel-heading">Confirm deletion</h3>
+                <p class="auto-danger-copy">This will move the vehicle and its related records to soft-delete state.</p>
+                <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="auto-form-actions auto-form-actions-inline">
+                    <button type="submit" class="auto-btn auto-btn-danger">Delete Vehicle</button>
+                    <a asp-controller="Cars" asp-action="Index" class="auto-btn auto-btn-ghost">Cancel</a>
+                </form>
+            </aside>
+        </div>
+    </article>
+</main>

@@ -2,9 +2,9 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CarExpenses.Model.Models;
+using CarExpenses.Model;
 
-
-public class CarTire
+public class CarTire : ISoftDeleate
 {
     [Key]
     public int Id { get; set;}
@@ -15,4 +15,5 @@ public class CarTire
     public int TireId { get; set; }
     public virtual Tire? Tire { get; set; }
     public DateTime InstalledDate { get; set; }
+    public DateTime? DeleatedAt { get; set; }
 }

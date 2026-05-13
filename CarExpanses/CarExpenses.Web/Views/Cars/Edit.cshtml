@@ -1,0 +1,14 @@
+@model CarExpenses.Web.Models.CarFormViewModel
+@{
+    ViewData["Title"] = "Edit Vehicle";
+}
+
+<main class="auto-page-container">
+    <nav class="auto-breadcrumb" aria-label="Back navigation">
+        <a asp-controller="Cars" asp-action="Index" class="auto-btn auto-btn-ghost">Back to Garage</a>
+    </nav>
+
+    <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+        <partial name="_CarForm" model="Model" />
+    </form>
+</main>

@@ -1,6 +1,11 @@
 using CarExpenses.Model.Enums;
 using CarExpenses.Model.Models;
+using CarExpenses.Model;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CarExpenses.DAL;
 
@@ -24,6 +29,9 @@ public class CarExpesesDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply global query filters for soft-delete
+        ApplySoftDeleteQueryFilters(modelBuilder);
 
         modelBuilder.Entity<User>().HasData(
             new User
@@ -276,5 +284,46 @@ public class CarExpesesDbContext : DbContext
                 CategoryId = 3,
                 CarId = 3
             });
+    }
+
+    private static void ApplySoftDeleteQueryFilters(ModelBuilder modelBuilder)
+    {
+        var entityTypes = modelBuilder.Model.GetEntityTypes()
+            .Where(t => typeof(ISoftDeleate).IsAssignableFrom(t.ClrType))
+            .ToList();
+
+        foreach (var entityType in entityTypes)
+        {
+            var method = typeof(CarExpesesDbContext).GetMethod(nameof(SetSoftDeleteFilter), BindingFlags.NonPublic | BindingFlags.Static)?.MakeGenericMethod(entityType.ClrType);
+            method?.Invoke(null, new object[] { modelBuilder });
+        }
+    }
+
+    private static void SetSoftDeleteFilter<TEntity>(ModelBuilder builder) where TEntity : class, ISoftDeleate
+    {
+        builder.Entity<TEntity>().HasQueryFilter(e => !e.DeleatedAt.HasValue);
+    }
+
+    private void UpdateSoftDeleteStatuses()
+    {
+        var entries = ChangeTracker.Entries().Where(e => e.State == EntityState.Deleted && e.Entity is ISoftDeleate).ToList();
+        foreach (var entry in entries)
+        {
+            var entity = (ISoftDeleate)entry.Entity;
+            entity.DeleatedAt = DateTime.UtcNow;
+            entry.State = EntityState.Modified;
+        }
+    }
+
+    public override int SaveChanges()
+    {
+        UpdateSoftDeleteStatuses();
+        return base.SaveChanges();
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        UpdateSoftDeleteStatuses();
+        return base.SaveChangesAsync(cancellationToken);
     }
 }

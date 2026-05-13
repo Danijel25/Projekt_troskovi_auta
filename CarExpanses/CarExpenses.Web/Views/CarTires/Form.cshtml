@@ -1,0 +1,51 @@
+@model CarTireFormViewModel
+@{
+    var isCreate = Model.Id == 0;
+}
+
+<main class="auto-page-container">
+    <nav class="auto-breadcrumb" aria-label="Back navigation">
+        <a asp-controller="CarTires" asp-action="Index" class="auto-btn auto-btn-ghost">Back to Car Tires</a>
+    </nav>
+
+    <section class="auto-form-container">
+        <header class="auto-form-header">
+            <div>
+                <p class="auto-kicker">Installation records</p>
+                <h1 class="auto-form-title">@(isCreate ? "Add New Assignment" : "Edit Assignment")</h1>
+            </div>
+        </header>
+
+        <div class="auto-form-shell">
+            <form asp-action="@(isCreate ? "Create" : "Edit")" asp-route-id="@Model.Id" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger auto-validation-summary"></div>
+                <div class="auto-form-grid">
+                    <div class="auto-form-group auto-form-group-wide">
+                        <label asp-for="CarId" class="auto-label"></label>
+                        <select asp-for="CarId" asp-items="Model.CarOptions" class="auto-input auto-select">
+                            <option value="">Select car</option>
+                        </select>
+                        <span asp-validation-for="CarId" class="text-danger"></span>
+                    </div>
+                    <div class="auto-form-group auto-form-group-wide">
+                        <label asp-for="TireId" class="auto-label"></label>
+                        <select asp-for="TireId" asp-items="Model.TireOptions" class="auto-input auto-select">
+                            <option value="">Select tire</option>
+                        </select>
+                        <span asp-validation-for="TireId" class="text-danger"></span>
+                    </div>
+                    <div class="auto-form-group">
+                        <label asp-for="InstalledDate" class="auto-label"></label>
+                        <input asp-for="InstalledDate" class="auto-input" type="date" />
+                        <span asp-validation-for="InstalledDate" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <footer class="auto-form-actions">
+                    <button type="submit" class="auto-btn auto-btn-accent">Save Assignment</button>
+                    <a asp-controller="CarTires" asp-action="Index" class="auto-btn auto-btn-ghost">Cancel</a>
+                </footer>
+            </form>
+        </div>
+    </section>
+</main>

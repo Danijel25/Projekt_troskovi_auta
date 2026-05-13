@@ -4,11 +4,14 @@
 }
 
 <main class="auto-page-container">
-    <header class="auto-page-header">
+    <header class="auto-page-header auto-page-header-split">
         <div>
             <p class="auto-kicker">Vehicle archive</p>
             <h1 class="auto-title">My Garage</h1>
         </div>
+        <a asp-controller="Cars" asp-action="Create" class="auto-btn auto-btn-accent auto-btn-large">
+            Add New Vehicle
+        </a>
     </header>
 
     <section class="auto-grid" aria-label="Cars list">
@@ -28,10 +31,20 @@
                     </dl>
                 </div>
                 <footer class="auto-card-actions">
-                    <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id" class="auto-btn auto-btn-primary"
-                       aria-label="View details for @car.Brand @car.Model">
-                        Details
-                    </a>
+                    <div class="auto-action-group">
+                        <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id" class="auto-btn auto-btn-primary"
+                           aria-label="View details for @car.Brand @car.Model">
+                            Details
+                        </a>
+                        <a asp-controller="Cars" asp-action="Edit" asp-route-id="@car.Id" class="auto-btn auto-btn-ghost"
+                           aria-label="Edit @car.Brand @car.Model">
+                            Update
+                        </a>
+                        <a asp-controller="Cars" asp-action="Delete" asp-route-id="@car.Id" class="auto-btn auto-btn-danger"
+                           aria-label="Delete @car.Brand @car.Model">
+                            Delete
+                        </a>
+                    </div>
                 </footer>
             </article>
         }

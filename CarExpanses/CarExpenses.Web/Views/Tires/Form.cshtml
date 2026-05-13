@@ -1,0 +1,52 @@
+@model TireFormViewModel
+@{
+    var isCreate = Model.Id == 0;
+}
+
+<main class="auto-page-container">
+    <nav class="auto-breadcrumb" aria-label="Back navigation">
+        <a asp-controller="Tires" asp-action="Index" class="auto-btn auto-btn-ghost">Back to Tires</a>
+    </nav>
+
+    <section class="auto-form-container">
+        <header class="auto-form-header">
+            <div>
+                <p class="auto-kicker">Tire inventory</p>
+                <h1 class="auto-form-title">@(isCreate ? "Add New Tire" : "Edit Tire")</h1>
+            </div>
+        </header>
+
+        <div class="auto-form-shell">
+            <form asp-action="@(isCreate ? "Create" : "Edit")" asp-route-id="@Model.Id" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger auto-validation-summary"></div>
+                <div class="auto-form-grid">
+                    <div class="auto-form-group">
+                        <label asp-for="Brand" class="auto-label"></label>
+                        <input asp-for="Brand" class="auto-input" />
+                        <span asp-validation-for="Brand" class="text-danger"></span>
+                    </div>
+                    <div class="auto-form-group">
+                        <label asp-for="Model" class="auto-label"></label>
+                        <input asp-for="Model" class="auto-input" />
+                        <span asp-validation-for="Model" class="text-danger"></span>
+                    </div>
+                    <div class="auto-form-group">
+                        <label asp-for="Season" class="auto-label"></label>
+                        <input asp-for="Season" class="auto-input" />
+                        <span asp-validation-for="Season" class="text-danger"></span>
+                    </div>
+                    <div class="auto-form-group">
+                        <label asp-for="Price" class="auto-label"></label>
+                        <input asp-for="Price" class="auto-input" type="number" step="0.01" />
+                        <span asp-validation-for="Price" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <footer class="auto-form-actions">
+                    <button type="submit" class="auto-btn auto-btn-accent">Save Tire</button>
+                    <a asp-controller="Tires" asp-action="Index" class="auto-btn auto-btn-ghost">Cancel</a>
+                </footer>
+            </form>
+        </div>
+    </section>
+</main>

@@ -1,0 +1,40 @@
+@model CarTire
+
+<main class="auto-page-container">
+    <nav class="auto-breadcrumb" aria-label="Back navigation">
+        <a asp-controller="CarTires" asp-action="Index" class="auto-btn auto-btn-ghost">Back to Car Tires</a>
+    </nav>
+
+    <article class="auto-details-hero auto-card-danger">
+        <header class="auto-details-header auto-details-header-danger">
+            <div>
+                <p class="auto-kicker">Destructive action</p>
+                <h1 class="auto-hero-title">Delete tire assignment?</h1>
+            </div>
+            <span class="auto-hero-tag">#@Model.Id</span>
+        </header>
+
+        <div class="auto-details-body auto-delete-body">
+            <section class="auto-data-panel">
+                <h2 class="auto-panel-heading">Assignment summary</h2>
+                <dl class="auto-stats auto-stats-compact">
+                    <dt>Car</dt>
+                    <dd>@Model.CarId</dd>
+                    <dt>Tire</dt>
+                    <dd>@Model.TireId</dd>
+                    <dt>Installed</dt>
+                    <dd>@Model.InstalledDate.ToString("yyyy-MM-dd")</dd>
+                </dl>
+            </section>
+
+            <aside class="auto-action-panel auto-danger-panel">
+                <h3 class="auto-panel-heading">Confirm deletion</h3>
+                <p class="auto-danger-copy">This will soft-delete the tire assignment.</p>
+                <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="auto-form-actions auto-form-actions-inline">
+                    <button type="submit" class="auto-btn auto-btn-danger">Delete Assignment</button>
+                    <a asp-controller="CarTires" asp-action="Index" class="auto-btn auto-btn-ghost">Cancel</a>
+                </form>
+            </aside>
+        </div>
+    </article>
+</main>

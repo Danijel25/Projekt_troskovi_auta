@@ -1,0 +1,64 @@
+@model InsuranceFormViewModel
+@{
+    var isCreate = Model.Id == 0;
+}
+
+<main class="auto-page-container">
+    <nav class="auto-breadcrumb" aria-label="Back navigation">
+        <a asp-controller="Insurances" asp-action="Index" class="auto-btn auto-btn-ghost">Back to Insurances</a>
+    </nav>
+
+    <section class="auto-form-container">
+        <header class="auto-form-header">
+            <div>
+                <p class="auto-kicker">Policy records</p>
+                <h1 class="auto-form-title">@(isCreate ? "Add New Insurance" : "Edit Insurance")</h1>
+            </div>
+        </header>
+
+        <div class="auto-form-shell">
+            <form asp-action="@(isCreate ? "Create" : "Edit")" asp-route-id="@Model.Id" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger auto-validation-summary"></div>
+                <div class="auto-form-grid">
+                    <div class="auto-form-group auto-form-group-wide">
+                        <label asp-for="CarId" class="auto-label"></label>
+                        <select asp-for="CarId" asp-items="Model.CarOptions" class="auto-input auto-select">
+                            <option value="">Select car</option>
+                        </select>
+                        <span asp-validation-for="CarId" class="text-danger"></span>
+                    </div>
+                    <div class="auto-form-group">
+                        <label asp-for="Company" class="auto-label"></label>
+                        <input asp-for="Company" class="auto-input" />
+                        <span asp-validation-for="Company" class="text-danger"></span>
+                    </div>
+                    <div class="auto-form-group">
+                        <label asp-for="InsuranceType" class="auto-label"></label>
+                        <input asp-for="InsuranceType" class="auto-input" />
+                        <span asp-validation-for="InsuranceType" class="text-danger"></span>
+                    </div>
+                    <div class="auto-form-group">
+                        <label asp-for="Price" class="auto-label"></label>
+                        <input asp-for="Price" class="auto-input" type="number" step="0.01" />
+                        <span asp-validation-for="Price" class="text-danger"></span>
+                    </div>
+                    <div class="auto-form-group">
+                        <label asp-for="StartDate" class="auto-label"></label>
+                        <input asp-for="StartDate" class="auto-input" type="date" />
+                        <span asp-validation-for="StartDate" class="text-danger"></span>
+                    </div>
+                    <div class="auto-form-group">
+                        <label asp-for="EndDate" class="auto-label"></label>
+                        <input asp-for="EndDate" class="auto-input" type="date" />
+                        <span asp-validation-for="EndDate" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <footer class="auto-form-actions">
+                    <button type="submit" class="auto-btn auto-btn-accent">Save Insurance</button>
+                    <a asp-controller="Insurances" asp-action="Index" class="auto-btn auto-btn-ghost">Cancel</a>
+                </footer>
+            </form>
+        </div>
+    </section>
+</main>

@@ -29,6 +29,15 @@ argument-hint: "EF Core queries, migrations, model changes, or seeding"
 - Keep filtering, sorting, and paging inside the query so EF Core can translate it to SQL.
 - Avoid loading more data than needed just to filter in memory later.
 
+## CRUD Guidance
+
+- **Delete (soft delete):** Use a soft-delete marker (`ISoftDelete` interface that implements `DeletedAt`) instead of hard deletes for all application-level deletions. Override the delete operation in SaveChanges and SaveChangesAsync to update the soft-delete marker.
+- **Cascade soft-delete:** When deleting an entity that has related or connected entities, apply soft-delete to those related entities as well (cascade soft-delete) so history and referential integrity are preserved.
+- **Read:** Always filter out soft-deleted records in queries by configuring a global query filter on the `DbContext` for types that implement the soft-delete marker. Ensure read endpoints and repository methods exclude deleted items by default.
+- **Create:** Use dedicated create/DTO/form models instead of binding UI or HTTP inputs directly to EF entities. Map create models to entities with an explicit mapper (e.g., AutoMapper) or explicit mapping code and validate/sanitize input before mapping.
+- **Update/Edit:** For edits, fetch the existing entity first and apply only allowed field updates to avoid overposting. Use dedicated update DTO/form models (similar to create models) and map allowed fields explicitly. Preserve immutable and audit fields and avoid wholesale replacement of navigation collections unless intended.
+
+
 ## Migration Guidance
 - Generate a migration after the model change is complete, not before.
 - Review the migration file and snapshot for unintended table or column changes.
@@ -47,3 +56,5 @@ argument-hint: "EF Core queries, migrations, model changes, or seeding"
 - The migration reflects the actual model delta.
 - Seed data still satisfies constraints and relationships.
 - Any dependent repository, controller, or service code still uses the updated model correctly.
+- Delete operation is implemented as a soft-delete that updates the `DeletedAt` field instead of removing the record from the database. This is done by overriding the delete operation in `SaveChanges` and `SaveChangesAsync` to set the soft-delete marker instead of performing a hard delete.
+- Read operations exclude soft-deleted records by default (global filter).

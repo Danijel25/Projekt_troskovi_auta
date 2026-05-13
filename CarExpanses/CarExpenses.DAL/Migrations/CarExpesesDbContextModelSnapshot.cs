@@ -59,6 +59,9 @@ namespace CarExpenses.DAL.Migrations
                     b.Property<int>("Year")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("DeleatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
                     b.HasIndex("UserId");
@@ -124,6 +127,9 @@ namespace CarExpenses.DAL.Migrations
                     b.Property<int>("TireId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("DeleatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CarId");
@@ -180,6 +186,9 @@ namespace CarExpenses.DAL.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("DeleatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CarId");
@@ -230,6 +239,9 @@ namespace CarExpenses.DAL.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("DeleatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
                     b.ToTable("ExpenseCategories");
@@ -274,6 +286,9 @@ namespace CarExpenses.DAL.Migrations
 
                     b.Property<decimal>("PricePerLiter")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("DeleatedAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -339,6 +354,9 @@ namespace CarExpenses.DAL.Migrations
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("DeleatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CarId");
@@ -398,6 +416,9 @@ namespace CarExpenses.DAL.Migrations
 
                     b.Property<int>("Mileage")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeleatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("ServiceDate")
                         .HasColumnType("datetime2");
@@ -468,6 +489,9 @@ namespace CarExpenses.DAL.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("DeleatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
                     b.ToTable("Tires");
@@ -518,6 +542,9 @@ namespace CarExpenses.DAL.Migrations
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeleatedAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 

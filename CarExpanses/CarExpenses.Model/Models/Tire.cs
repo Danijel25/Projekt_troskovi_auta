@@ -1,7 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
 namespace CarExpenses.Model.Models;
-public class Tire
+using CarExpenses.Model;
+public class Tire : ISoftDeleate
 {
     [Key]
     public int Id { get; set; }
@@ -10,4 +11,5 @@ public class Tire
     public required string Season { get; set; }
     public decimal Price { get; set; } 
     public virtual ICollection<CarTire>? CarTires { get; set; } = new List<CarTire>();
+    public DateTime? DeleatedAt { get; set; }
 }

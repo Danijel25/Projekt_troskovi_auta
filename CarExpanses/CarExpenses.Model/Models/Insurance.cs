@@ -2,8 +2,9 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CarExpenses.Model.Models;
+using CarExpenses.Model;
 
-public class Insurance
+public class Insurance : ISoftDeleate
 {
     [Key]
     public int Id { get; set; }
@@ -15,4 +16,5 @@ public class Insurance
     [ForeignKey("Car")]
     public int CarId { get; set; }
     public virtual Car? Car { get; set; }
+    public DateTime? DeleatedAt { get; set; }
 }

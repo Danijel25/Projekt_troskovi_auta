@@ -1,10 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using CarExpenses.Model.Enums;
+using CarExpenses.Model;
 
 namespace CarExpenses.Model.Models;
 
-public class Car
+public class Car : ISoftDeleate
 {    
     [Key]
     public int Id { get; set; }
@@ -24,4 +25,5 @@ public class Car
     public virtual ICollection<Insurance>? Insurances { get; set; } = new List<Insurance>();
     public virtual ICollection<CarTire>? CarTires { get; set; } = new List<CarTire>();
     public virtual ICollection<Expense>? Expenses { get; set; } = new List<Expense>();
+    public DateTime? DeleatedAt { get; set; }
 }

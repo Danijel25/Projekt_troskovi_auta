@@ -1,0 +1,48 @@
+@model UserFormViewModel
+@{
+    var isCreate = Model.Id == 0;
+}
+
+<main class="auto-page-container">
+    <nav class="auto-breadcrumb" aria-label="Back navigation">
+        <a asp-controller="Users" asp-action="Index" class="auto-btn auto-btn-ghost">Back to Users</a>
+    </nav>
+
+    <section class="auto-form-container">
+        <header class="auto-form-header">
+            <div>
+                <p class="auto-kicker">Driver profile</p>
+                <h1 class="auto-form-title">@(isCreate ? "Add New User" : "Edit User")</h1>
+            </div>
+        </header>
+
+        <div class="auto-form-shell">
+            <form asp-action="@(isCreate ? "Create" : "Edit")" asp-route-id="@Model.Id" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger auto-validation-summary"></div>
+
+                <div class="auto-form-grid">
+                    <div class="auto-form-group">
+                        <label asp-for="Username" class="auto-label"></label>
+                        <input asp-for="Username" class="auto-input" />
+                        <span asp-validation-for="Username" class="text-danger"></span>
+                    </div>
+                    <div class="auto-form-group">
+                        <label asp-for="Email" class="auto-label"></label>
+                        <input asp-for="Email" class="auto-input" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                    <div class="auto-form-group auto-form-group-wide">
+                        <label asp-for="Password" class="auto-label"></label>
+                        <input asp-for="Password" class="auto-input" type="password" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <footer class="auto-form-actions">
+                    <button type="submit" class="auto-btn auto-btn-accent">Save User</button>
+                    <a asp-controller="Users" asp-action="Index" class="auto-btn auto-btn-ghost">Cancel</a>
+                </footer>
+            </form>
+        </div>
+    </section>
+</main>
