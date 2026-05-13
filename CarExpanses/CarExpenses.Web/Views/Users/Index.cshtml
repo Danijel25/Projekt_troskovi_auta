@@ -12,28 +12,16 @@
         <a asp-action="Create" class="auto-btn auto-btn-accent auto-btn-large">Add New User</a>
     </header>
 
-    <section class="auto-grid" aria-label="Users list">
-        @foreach (var user in Model)
-        {
-            <article class="auto-card">
-                <div class="auto-card-badge">#@user.Id</div>
-                <div class="auto-card-content">
-                    <h2 class="auto-card-title">@user.Username <span>Profile</span></h2>
-                    <dl class="auto-stats">
-                        <dt>Email</dt>
-                        <dd>@user.Email</dd>
-                        <dt>Cars</dt>
-                        <dd>@(user.Cars?.Count ?? 0)</dd>
-                    </dl>
-                </div>
-                <footer class="auto-card-actions">
-                    <div class="auto-action-group">
-                        <a asp-action="Details" asp-route-id="@user.Id" class="auto-btn auto-btn-primary" aria-label="View details for @user.Username">Details</a>
-                        <a asp-action="Edit" asp-route-id="@user.Id" class="auto-btn auto-btn-ghost" aria-label="Edit @user.Username">Update</a>
-                        <a asp-action="Delete" asp-route-id="@user.Id" class="auto-btn auto-btn-danger" aria-label="Delete @user.Username">Delete</a>
-                    </div>
-                </footer>
-            </article>
-        }
-    </section>
+    <div class="auto-search" data-ajax-search data-search-url="@Url.Action("Search")" data-search-target="#users-list">
+        <label class="auto-label" for="users-search">Search users</label>
+        <div class="auto-search-row">
+            <input id="users-search" type="search" class="auto-input auto-search-input" placeholder="Search by username or email" data-search-input />
+            <button type="button" class="auto-btn auto-btn-ghost auto-search-clear" data-search-clear>Clear</button>
+        </div>
+        <p class="auto-search-status" data-search-status aria-live="polite"></p>
+    </div>
+
+    <div id="users-list" class="auto-search-results" aria-live="polite">
+        @await Html.PartialAsync("_UserList", Model)
+    </div>
 </main>

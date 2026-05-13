@@ -14,39 +14,16 @@
         </a>
     </header>
 
-    <section class="auto-grid" aria-label="Cars list">
-        @foreach (var car in Model)
-        {
-            <article class="auto-card">
-                <div class="auto-card-badge">@car.Year</div>
-                <div class="auto-card-content">
-                    <h2 class="auto-card-title">@car.Brand <span>@car.Model</span></h2>
-                    <dl class="auto-stats">
-                        <dt>Fuel</dt>
-                        <dd>@car.FuelType</dd>
-                        <dt>Engine</dt>
-                        <dd>@car.EngineVolume L</dd>
-                        <dt>Mileage</dt>
-                        <dd>@car.CurrentMilage km</dd>
-                    </dl>
-                </div>
-                <footer class="auto-card-actions">
-                    <div class="auto-action-group">
-                        <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id" class="auto-btn auto-btn-primary"
-                           aria-label="View details for @car.Brand @car.Model">
-                            Details
-                        </a>
-                        <a asp-controller="Cars" asp-action="Edit" asp-route-id="@car.Id" class="auto-btn auto-btn-ghost"
-                           aria-label="Edit @car.Brand @car.Model">
-                            Update
-                        </a>
-                        <a asp-controller="Cars" asp-action="Delete" asp-route-id="@car.Id" class="auto-btn auto-btn-danger"
-                           aria-label="Delete @car.Brand @car.Model">
-                            Delete
-                        </a>
-                    </div>
-                </footer>
-            </article>
-        }
-    </section>
+    <div class="auto-search" data-ajax-search data-search-url="@Url.Action("Search")" data-search-target="#car-list">
+        <label class="auto-label" for="car-search">Search cars</label>
+        <div class="auto-search-row">
+            <input id="car-search" type="search" class="auto-input auto-search-input" placeholder="Search by brand, model, year, or fuel" data-search-input />
+            <button type="button" class="auto-btn auto-btn-ghost auto-search-clear" data-search-clear>Clear</button>
+        </div>
+        <p class="auto-search-status" data-search-status aria-live="polite"></p>
+    </div>
+
+    <div id="car-list" class="auto-search-results" aria-live="polite">
+        @await Html.PartialAsync("_CarList", Model)
+    </div>
 </main>

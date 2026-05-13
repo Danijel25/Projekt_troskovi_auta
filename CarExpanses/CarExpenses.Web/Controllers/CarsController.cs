@@ -1,22 +1,46 @@
-using CarExpenses.DAL;
 using CarExpenses.DAL.Repositories;
 using CarExpenses.Model.Enums;
 using CarExpenses.Model.Models;
 using CarExpenses.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 
 namespace CarExpenses.Web.Controllers;
 
 [Route("auti")]
-public class CarsController(ICarRepository carRepository, IUserRepository userRepository, CarExpesesDbContext dbContext) : Controller
+public class CarsController(ICarRepository carRepository, IUserRepository userRepository) : Controller
 {
     [Route("svi")]
     public IActionResult Index()
     {
         var cars = carRepository.GetAll();
         return View(cars);
+    }
+
+    [HttpGet]
+    [Route("pretraga")]
+    public IActionResult Search(string? query)
+    {
+        var cars = carRepository.GetAll();
+
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return PartialView("_CarList", cars);
+        }
+
+        var term = query.Trim();
+        var filteredCars = cars
+            .Where(car =>
+                car.Brand.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || car.Model.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || car.FuelType.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
+                || car.Year.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
+                || car.EngineVolume.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
+                || car.CurrentMilage.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
+                || car.Id.ToString().Contains(term, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        return PartialView("_CarList", filteredCars);
     }
 
     [Route("detalji/{id}")]
@@ -62,8 +86,7 @@ public class CarsController(ICarRepository carRepository, IUserRepository userRe
             FuelType = formModel.FuelType
         };
 
-        dbContext.Cars.Add(car);
-        dbContext.SaveChanges();
+        carRepository.Add(car);
 
         return RedirectToAction(nameof(Index));
     }
@@ -72,7 +95,7 @@ public class CarsController(ICarRepository carRepository, IUserRepository userRe
     [Route("uredi/{id}")]
     public IActionResult Edit(int id)
     {
-        var car = dbContext.Cars.AsNoTracking().FirstOrDefault(car => car.Id == id);
+        var car = carRepository.GetById(id);
 
         if (car is null)
         {
@@ -97,24 +120,24 @@ public class CarsController(ICarRepository carRepository, IUserRepository userRe
             return View(BuildFormModel(formModel));
         }
 
-        var car = dbContext.Cars.FirstOrDefault(car => car.Id == id);
+        var car = new Car
+        {
+            Id = formModel.Id,
+            UserId = formModel.UserId,
+            Brand = formModel.Brand,
+            Model = formModel.Model,
+            Year = formModel.Year,
+            EngineVolume = formModel.EngineVolume,
+            CurrentMilage = formModel.CurrentMilage,
+            PurchasePrice = formModel.PurchasePrice,
+            PurchaseDate = formModel.PurchaseDate,
+            FuelType = formModel.FuelType
+        };
 
-        if (car is null)
+        if (!carRepository.Update(car))
         {
             return NotFound();
         }
-
-        car.UserId = formModel.UserId;
-        car.Brand = formModel.Brand;
-        car.Model = formModel.Model;
-        car.Year = formModel.Year;
-        car.EngineVolume = formModel.EngineVolume;
-        car.CurrentMilage = formModel.CurrentMilage;
-        car.PurchasePrice = formModel.PurchasePrice;
-        car.PurchaseDate = formModel.PurchaseDate;
-        car.FuelType = formModel.FuelType;
-
-        dbContext.SaveChanges();
 
         return RedirectToAction(nameof(Index));
     }
@@ -123,7 +146,7 @@ public class CarsController(ICarRepository carRepository, IUserRepository userRe
     [Route("obrisi/{id}")]
     public IActionResult Delete(int id)
     {
-        var car = LoadCarForDelete(id);
+        var car = carRepository.GetById(id);
 
         if (car is null)
         {
@@ -138,15 +161,10 @@ public class CarsController(ICarRepository carRepository, IUserRepository userRe
     [Route("obrisi/{id}")]
     public IActionResult DeleteConfirmed(int id)
     {
-        var car = LoadCarForDelete(id);
-
-        if (car is null)
+        if (!carRepository.Delete(id))
         {
             return NotFound();
         }
-
-        dbContext.Cars.Remove(car);
-        dbContext.SaveChanges();
 
         return RedirectToAction(nameof(Index));
     }
@@ -182,18 +200,6 @@ public class CarsController(ICarRepository carRepository, IUserRepository userRe
         return formModel;
     }
 
-    private Car? LoadCarForDelete(int id)
-    {
-        return dbContext.Cars
-            .Include(car => car.FuelExpenses)
-            .Include(car => car.ServiceRecords)
-            .Include(car => car.Insurances)
-            .Include(car => car.CarTires)!
-                .ThenInclude(carTire => carTire.Tire)
-            .Include(car => car.Expenses)!
-                .ThenInclude(expense => expense.Category)
-            .FirstOrDefault(car => car.Id == id);
-    }
 }
 
 

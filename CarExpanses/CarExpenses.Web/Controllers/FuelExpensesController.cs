@@ -1,17 +1,42 @@
-using CarExpenses.DAL;
 using CarExpenses.DAL.Repositories;
 using CarExpenses.Model.Models;
 using CarExpenses.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 
 namespace CarExpenses.Web.Controllers;
 
 [Route("troskovi-goriva/[action]")]
-public class FuelExpensesController(IFuelExpenseRepository repository, ICarRepository carRepository, CarExpesesDbContext dbContext) : Controller
+public class FuelExpensesController(IFuelExpenseRepository repository, ICarRepository carRepository) : Controller
 {
     public IActionResult Index() => View(repository.GetAll());
+
+    [HttpGet]
+    public IActionResult Search(string? query)
+    {
+        var fuelExpenses = repository.GetAll();
+
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return PartialView("_FuelExpenseList", fuelExpenses);
+        }
+
+        var term = query.Trim();
+        var filtered = fuelExpenses
+            .Where(expense =>
+                expense.CarId.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
+                || expense.TotalCost.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
+                || expense.Liters.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
+                || expense.PricePerLiter.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
+                || expense.Kilometars.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
+                || expense.FuelExpenseDate.ToString("yyyy-MM-dd").Contains(term, StringComparison.OrdinalIgnoreCase)
+                || expense.Id.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
+                || (expense.Car?.Brand?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
+                || (expense.Car?.Model?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false))
+            .ToList();
+
+        return PartialView("_FuelExpenseList", filtered);
+    }
 
     public IActionResult Details(int id)
     {
@@ -31,7 +56,7 @@ public class FuelExpensesController(IFuelExpenseRepository repository, ICarRepos
             return View("Form", BuildFormModel(formModel));
         }
 
-        dbContext.FuelExpenses.Add(new FuelExpense
+        repository.Add(new FuelExpense
         {
             FuelExpenseDate = formModel.FuelExpenseDate,
             Liters = formModel.Liters,
@@ -39,15 +64,13 @@ public class FuelExpensesController(IFuelExpenseRepository repository, ICarRepos
             Kilometars = formModel.Kilometars,
             CarId = formModel.CarId
         });
-
-        dbContext.SaveChanges();
         return RedirectToAction(nameof(Index));
     }
 
     [HttpGet]
     public IActionResult Edit(int id)
     {
-        var fuelExpense = dbContext.FuelExpenses.AsNoTracking().FirstOrDefault(item => item.Id == id);
+        var fuelExpense = repository.GetById(id);
         return fuelExpense is null ? NotFound() : View("Form", BuildFormModel(fuelExpense));
     }
 
@@ -65,26 +88,27 @@ public class FuelExpensesController(IFuelExpenseRepository repository, ICarRepos
             return View("Form", BuildFormModel(formModel));
         }
 
-        var fuelExpense = dbContext.FuelExpenses.FirstOrDefault(item => item.Id == id);
-        if (fuelExpense is null)
+        var fuelExpense = new FuelExpense
+        {
+            Id = formModel.Id,
+            FuelExpenseDate = formModel.FuelExpenseDate,
+            Liters = formModel.Liters,
+            PricePerLiter = formModel.PricePerLiter,
+            Kilometars = formModel.Kilometars,
+            CarId = formModel.CarId
+        };
+
+        if (!repository.Update(fuelExpense))
         {
             return NotFound();
         }
-
-        fuelExpense.FuelExpenseDate = formModel.FuelExpenseDate;
-        fuelExpense.Liters = formModel.Liters;
-        fuelExpense.PricePerLiter = formModel.PricePerLiter;
-        fuelExpense.Kilometars = formModel.Kilometars;
-        fuelExpense.CarId = formModel.CarId;
-
-        dbContext.SaveChanges();
         return RedirectToAction(nameof(Index));
     }
 
     [HttpGet]
     public IActionResult Delete(int id)
     {
-        var fuelExpense = dbContext.FuelExpenses.Include(item => item.Car).FirstOrDefault(item => item.Id == id);
+        var fuelExpense = repository.GetById(id);
         return fuelExpense is null ? NotFound() : View(fuelExpense);
     }
 
@@ -92,14 +116,10 @@ public class FuelExpensesController(IFuelExpenseRepository repository, ICarRepos
     [ValidateAntiForgeryToken]
     public IActionResult DeleteConfirmed(int id)
     {
-        var fuelExpense = dbContext.FuelExpenses.Include(item => item.Car).FirstOrDefault(item => item.Id == id);
-        if (fuelExpense is null)
+        if (!repository.Delete(id))
         {
             return NotFound();
         }
-
-        dbContext.FuelExpenses.Remove(fuelExpense);
-        dbContext.SaveChanges();
         return RedirectToAction(nameof(Index));
     }
 

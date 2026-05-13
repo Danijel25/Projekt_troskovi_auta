@@ -1,0 +1,28 @@
+@model AutocompleteDropdownViewModel
+
+@{
+    var inputId = string.IsNullOrWhiteSpace(Model.InputId) ? "auto-lookup" : Model.InputId;
+    var hiddenId = string.IsNullOrWhiteSpace(Model.HiddenInputId) ? inputId + "_Value" : Model.HiddenInputId;
+    var hiddenName = string.IsNullOrWhiteSpace(Model.HiddenInputName) ? hiddenId : Model.HiddenInputName;
+    var listId = inputId + "_List";
+}
+
+<div class="auto-lookup" data-autocomplete-dropdown data-lookup-url="@Model.LookupUrl" data-min-chars="@Model.MinChars" data-limit="@Model.Limit">
+    <div class="auto-lookup-control">
+        <input id="@inputId"
+               type="text"
+               class="auto-input auto-lookup-input"
+               placeholder="@Model.Placeholder"
+               value="@Model.SelectedLabel"
+               autocomplete="off"
+               role="combobox"
+               aria-expanded="false"
+               aria-controls="@listId"
+               aria-autocomplete="list"
+               data-lookup-input />
+        <input id="@hiddenId" name="@hiddenName" type="hidden" value="@Model.SelectedValue" data-lookup-value />
+        <button type="button" class="auto-btn auto-btn-ghost auto-lookup-toggle" data-lookup-toggle aria-label="Toggle options">v</button>
+    </div>
+    <ul id="@listId" class="auto-lookup-list" role="listbox" data-lookup-list hidden></ul>
+    <p class="auto-lookup-status" data-lookup-status aria-live="polite">@Model.Hint</p>
+</div>

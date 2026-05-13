@@ -104,6 +104,35 @@ body {
   gap: 1rem;
 }
 
+.auto-search {
+  margin: 1rem 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.auto-search-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.auto-search-input {
+  flex: 1;
+  min-width: 220px;
+}
+
+.auto-search-clear {
+  white-space: nowrap;
+}
+
+.auto-search-status {
+  margin: 0;
+  min-height: 1.2rem;
+  font-size: 0.85rem;
+  color: #6b6254;
+}
+
 .auto-kicker {
   margin: 0;
   text-transform: uppercase;
@@ -126,7 +155,7 @@ body {
 
 .auto-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.4rem;
 }
 
@@ -527,18 +556,104 @@ body {
   min-height: 3rem;
   width: 100%;
   padding: 0.65rem 0.8rem;
-  border: var(--auto-border-thin);
+  border: var(--auto-border-thick);
   border-radius: var(--auto-radius);
   background: #fff;
   color: var(--auto-dark);
   font: inherit;
+  box-shadow: 3px 3px 0 var(--auto-dark);
+  transition: transform 0.1s ease-out, box-shadow 0.1s ease-out, border-color 0.15s ease-out;
 }
 
 .auto-input:focus,
 .auto-select:focus {
   outline: none;
-  border-color: var(--auto-red);
-  box-shadow: 0 0 0 0.15rem rgba(200, 42, 42, 0.16);
+  border-color: var(--auto-dark);
+  box-shadow: 4px 4px 0 var(--auto-yellow);
+  transform: translate(-1px, -1px);
+}
+
+textarea.auto-input {
+  resize: vertical;
+  min-height: 6rem;
+}
+
+.auto-lookup {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.auto-lookup-control {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.auto-lookup-input {
+  flex: 1;
+}
+
+.auto-lookup-toggle {
+  min-width: 3rem;
+  padding: 0.65rem 0.75rem;
+}
+
+.auto-lookup-list {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 0.45rem);
+  z-index: 20;
+  margin: 0;
+  padding: 0.4rem;
+  list-style: none;
+  background: var(--auto-paper);
+  border: var(--auto-border-thick);
+  border-radius: var(--auto-radius);
+  box-shadow: var(--auto-shadow-hover);
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.auto-lookup-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: var(--auto-radius);
+  cursor: pointer;
+  font-weight: 700;
+  border: 1.5px solid transparent;
+  transition: background-color 0.1s ease-out, border-color 0.1s ease-out, transform 0.1s ease-out, box-shadow 0.1s ease-out;
+}
+
+.auto-lookup-option.is-active,
+.auto-lookup-option:hover {
+  background: var(--auto-yellow);
+  border-color: var(--auto-dark);
+  color: var(--auto-dark);
+  transform: translate(-1px, -1px);
+  box-shadow: 2px 2px 0 var(--auto-dark);
+}
+
+.auto-lookup-label {
+  font-weight: 700;
+}
+
+.auto-lookup-hint {
+  font-size: 0.85rem;
+  color: #6b6254;
+  font-weight: 600;
+}
+
+.auto-lookup-status {
+  margin: 0;
+  min-height: 1.1rem;
+  font-size: 0.85rem;
+  color: #6b6254;
 }
 
 .auto-form-actions {
@@ -565,6 +680,11 @@ body {
     display: grid;
   }
 
+  .auto-search-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   .auto-form-grid {
     grid-template-columns: 1fr;
   }
@@ -572,6 +692,11 @@ body {
   .auto-action-group,
   .auto-form-actions {
     flex-direction: column;
+  }
+
+  .auto-lookup-control {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .auto-btn,

@@ -1,0 +1,33 @@
+@model IReadOnlyList<Tire>
+
+<section class="auto-grid" aria-label="Tires list">
+    @if (Model.Count == 0)
+    {
+        <p class="auto-empty-state">No tires found.</p>
+    }
+    else
+    {
+        foreach (var tire in Model)
+        {
+            <article class="auto-card">
+                <div class="auto-card-badge">@tire.Season</div>
+                <div class="auto-card-content">
+                    <h2 class="auto-card-title">@tire.Brand <span>@tire.Model</span></h2>
+                    <dl class="auto-stats">
+                        <dt>Price</dt>
+                        <dd>@tire.Price.ToString("C")</dd>
+                        <dt>Assignments</dt>
+                        <dd>@(tire.CarTires?.Count ?? 0)</dd>
+                    </dl>
+                </div>
+                <footer class="auto-card-actions">
+                    <div class="auto-action-group">
+                        <a asp-action="Details" asp-route-id="@tire.Id" class="auto-btn auto-btn-primary" aria-label="View details for @tire.Brand @tire.Model">Details</a>
+                        <a asp-action="Edit" asp-route-id="@tire.Id" class="auto-btn auto-btn-ghost" aria-label="Edit @tire.Brand @tire.Model">Update</a>
+                        <a asp-action="Delete" asp-route-id="@tire.Id" class="auto-btn auto-btn-danger" aria-label="Delete @tire.Brand @tire.Model">Delete</a>
+                    </div>
+                </footer>
+            </article>
+        }
+    }
+</section>

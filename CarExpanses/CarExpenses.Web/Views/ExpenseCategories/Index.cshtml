@@ -12,28 +12,16 @@
         <a asp-action="Create" class="auto-btn auto-btn-accent auto-btn-large">Add New Category</a>
     </header>
 
-    <section class="auto-grid" aria-label="Expense categories list">
-        @foreach (var item in Model)
-        {
-            <article class="auto-card">
-                <div class="auto-card-badge">#@item.Id</div>
-                <div class="auto-card-content">
-                    <h2 class="auto-card-title">@item.Name <span>Category</span></h2>
-                    <dl class="auto-stats">
-                        <dt>Expenses</dt>
-                        <dd>@(item.Expenses?.Count ?? 0)</dd>
-                        <dt>Identifier</dt>
-                        <dd>@item.Id</dd>
-                    </dl>
-                </div>
-                <footer class="auto-card-actions">
-                    <div class="auto-action-group">
-                        <a asp-action="Details" asp-route-id="@item.Id" class="auto-btn auto-btn-primary" aria-label="View expense category @item.Name">Details</a>
-                        <a asp-action="Edit" asp-route-id="@item.Id" class="auto-btn auto-btn-ghost" aria-label="Edit @item.Name">Update</a>
-                        <a asp-action="Delete" asp-route-id="@item.Id" class="auto-btn auto-btn-danger" aria-label="Delete @item.Name">Delete</a>
-                    </div>
-                </footer>
-            </article>
-        }
-    </section>
+    <div class="auto-search" data-ajax-search data-search-url="@Url.Action("Search")" data-search-target="#expense-categories-list">
+        <label class="auto-label" for="expense-categories-search">Search categories</label>
+        <div class="auto-search-row">
+            <input id="expense-categories-search" type="search" class="auto-input auto-search-input" placeholder="Search by name or id" data-search-input />
+            <button type="button" class="auto-btn auto-btn-ghost auto-search-clear" data-search-clear>Clear</button>
+        </div>
+        <p class="auto-search-status" data-search-status aria-live="polite"></p>
+    </div>
+
+    <div id="expense-categories-list" class="auto-search-results" aria-live="polite">
+        @await Html.PartialAsync("_ExpenseCategoryList", Model)
+    </div>
 </main>

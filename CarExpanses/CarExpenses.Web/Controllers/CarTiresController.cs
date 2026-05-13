@@ -1,17 +1,41 @@
-using CarExpenses.DAL;
 using CarExpenses.DAL.Repositories;
 using CarExpenses.Model.Models;
 using CarExpenses.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 
 namespace CarExpenses.Web.Controllers;
 
 [Route("[controller]/[action]")]
-public class CarTiresController(ICarTireRepository repository, ICarRepository carRepository, ITireRepository tireRepository, CarExpesesDbContext dbContext) : Controller
+public class CarTiresController(ICarTireRepository repository, ICarRepository carRepository, ITireRepository tireRepository) : Controller
 {
     public IActionResult Index() => View(repository.GetAll());
+
+    [HttpGet]
+    public IActionResult Search(string? query)
+    {
+        var assignments = repository.GetAll();
+
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return PartialView("_CarTireList", assignments);
+        }
+
+        var term = query.Trim();
+        var filtered = assignments
+            .Where(item =>
+                item.CarId.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
+                || item.TireId.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
+                || item.InstalledDate.ToString("yyyy-MM-dd").Contains(term, StringComparison.OrdinalIgnoreCase)
+                || (item.Car?.Brand?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
+                || (item.Car?.Model?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
+                || (item.Tire?.Brand?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
+                || (item.Tire?.Model?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
+                || (item.Tire?.Season?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false))
+            .ToList();
+
+        return PartialView("_CarTireList", filtered);
+    }
 
     public IActionResult Details(int id)
     {
@@ -31,21 +55,19 @@ public class CarTiresController(ICarTireRepository repository, ICarRepository ca
             return View("Form", BuildFormModel(formModel));
         }
 
-        dbContext.CarTires.Add(new CarTire
+        repository.Add(new CarTire
         {
             CarId = formModel.CarId,
             TireId = formModel.TireId,
             InstalledDate = formModel.InstalledDate
         });
-
-        dbContext.SaveChanges();
         return RedirectToAction(nameof(Index));
     }
 
     [HttpGet]
     public IActionResult Edit(int id)
     {
-        var carTire = dbContext.CarTires.AsNoTracking().FirstOrDefault(item => item.Id == id);
+        var carTire = repository.GetById(id);
         return carTire is null ? NotFound() : View("Form", BuildFormModel(carTire));
     }
 
@@ -63,28 +85,25 @@ public class CarTiresController(ICarTireRepository repository, ICarRepository ca
             return View("Form", BuildFormModel(formModel));
         }
 
-        var carTire = dbContext.CarTires.FirstOrDefault(item => item.Id == id);
-        if (carTire is null)
+        var carTire = new CarTire
+        {
+            Id = formModel.Id,
+            CarId = formModel.CarId,
+            TireId = formModel.TireId,
+            InstalledDate = formModel.InstalledDate
+        };
+
+        if (!repository.Update(carTire))
         {
             return NotFound();
         }
-
-        carTire.CarId = formModel.CarId;
-        carTire.TireId = formModel.TireId;
-        carTire.InstalledDate = formModel.InstalledDate;
-
-        dbContext.SaveChanges();
         return RedirectToAction(nameof(Index));
     }
 
     [HttpGet]
     public IActionResult Delete(int id)
     {
-        var carTire = dbContext.CarTires
-            .Include(item => item.Car)
-            .Include(item => item.Tire)
-            .FirstOrDefault(item => item.Id == id);
-
+        var carTire = repository.GetById(id);
         return carTire is null ? NotFound() : View(carTire);
     }
 
@@ -92,18 +111,10 @@ public class CarTiresController(ICarTireRepository repository, ICarRepository ca
     [ValidateAntiForgeryToken]
     public IActionResult DeleteConfirmed(int id)
     {
-        var carTire = dbContext.CarTires
-            .Include(item => item.Car)
-            .Include(item => item.Tire)
-            .FirstOrDefault(item => item.Id == id);
-
-        if (carTire is null)
+        if (!repository.Delete(id))
         {
             return NotFound();
         }
-
-        dbContext.CarTires.Remove(carTire);
-        dbContext.SaveChanges();
         return RedirectToAction(nameof(Index));
     }
 

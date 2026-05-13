@@ -1,6 +1,12 @@
 @model CarTireFormViewModel
 @{
     var isCreate = Model.Id == 0;
+    var selectedCarLabel = Model.CarOptions.FirstOrDefault(option => option.Value == Model.CarId.ToString())?.Text ?? string.Empty;
+    var selectedCarValue = Model.CarId > 0 ? Model.CarId.ToString() : string.Empty;
+    var selectedTireLabel = Model.TireOptions.FirstOrDefault(option => option.Value == Model.TireId.ToString())?.Text ?? string.Empty;
+    var selectedTireValue = Model.TireId > 0 ? Model.TireId.ToString() : string.Empty;
+    var carLookupUrl = Url.Action("Search", "Lookups", new { source = "cars" }) ?? string.Empty;
+    var tireLookupUrl = Url.Action("Search", "Lookups", new { source = "tires" }) ?? string.Empty;
 }
 
 <main class="auto-page-container">
@@ -21,17 +27,35 @@
                 <div asp-validation-summary="ModelOnly" class="text-danger auto-validation-summary"></div>
                 <div class="auto-form-grid">
                     <div class="auto-form-group auto-form-group-wide">
-                        <label asp-for="CarId" class="auto-label"></label>
-                        <select asp-for="CarId" asp-items="Model.CarOptions" class="auto-input auto-select">
-                            <option value="">Select car</option>
-                        </select>
+                        <label class="auto-label" for="CarId_Display">@Html.DisplayNameFor(model => model.CarId)</label>
+                        @await Html.PartialAsync("_AutocompleteDropdown", new AutocompleteDropdownViewModel
+                        {
+                            InputId = "CarId_Display",
+                            HiddenInputId = "CarId",
+                            HiddenInputName = "CarId",
+                            LookupUrl = carLookupUrl,
+                            Placeholder = "Search car",
+                            SelectedLabel = selectedCarLabel,
+                            SelectedValue = selectedCarValue,
+                            MinChars = 1,
+                            Limit = 25
+                        })
                         <span asp-validation-for="CarId" class="text-danger"></span>
                     </div>
                     <div class="auto-form-group auto-form-group-wide">
-                        <label asp-for="TireId" class="auto-label"></label>
-                        <select asp-for="TireId" asp-items="Model.TireOptions" class="auto-input auto-select">
-                            <option value="">Select tire</option>
-                        </select>
+                        <label class="auto-label" for="TireId_Display">@Html.DisplayNameFor(model => model.TireId)</label>
+                        @await Html.PartialAsync("_AutocompleteDropdown", new AutocompleteDropdownViewModel
+                        {
+                            InputId = "TireId_Display",
+                            HiddenInputId = "TireId",
+                            HiddenInputName = "TireId",
+                            LookupUrl = tireLookupUrl,
+                            Placeholder = "Search tire",
+                            SelectedLabel = selectedTireLabel,
+                            SelectedValue = selectedTireValue,
+                            MinChars = 1,
+                            Limit = 25
+                        })
                         <span asp-validation-for="TireId" class="text-danger"></span>
                     </div>
                     <div class="auto-form-group">

@@ -1,15 +1,34 @@
-using CarExpenses.DAL;
 using CarExpenses.DAL.Repositories;
 using CarExpenses.Model.Models;
 using CarExpenses.Web.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace CarExpenses.Web.Controllers;
 
-public class UsersController(IUserRepository repository, CarExpesesDbContext dbContext) : Controller
+public class UsersController(IUserRepository repository) : Controller
 {
     public IActionResult Index() => View(repository.GetAll());
+
+    [HttpGet]
+    public IActionResult Search(string? query)
+    {
+        var users = repository.GetAll();
+
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return PartialView("_UserList", users);
+        }
+
+        var term = query.Trim();
+        var filtered = users
+            .Where(user =>
+                user.Username.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || user.Email.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || user.Id.ToString().Contains(term, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        return PartialView("_UserList", filtered);
+    }
 
     public IActionResult Details(int id)
     {
@@ -28,21 +47,19 @@ public class UsersController(IUserRepository repository, CarExpesesDbContext dbC
             return View("Form", formModel);
         }
 
-        dbContext.Users.Add(new User
+        repository.Add(new User
         {
             Username = formModel.Username,
             Email = formModel.Email,
             Password = formModel.Password
         });
-
-        dbContext.SaveChanges();
         return RedirectToAction(nameof(Index));
     }
 
     [HttpGet]
     public IActionResult Edit(int id)
     {
-        var user = dbContext.Users.AsNoTracking().FirstOrDefault(user => user.Id == id);
+        var user = repository.GetById(id);
         return user is null ? NotFound() : View("Form", new UserFormViewModel
         {
             Id = user.Id,
@@ -66,37 +83,25 @@ public class UsersController(IUserRepository repository, CarExpesesDbContext dbC
             return View("Form", formModel);
         }
 
-        var user = dbContext.Users.FirstOrDefault(user => user.Id == id);
-        if (user is null)
+        var user = new User
+        {
+            Id = formModel.Id,
+            Username = formModel.Username,
+            Email = formModel.Email,
+            Password = formModel.Password
+        };
+
+        if (!repository.Update(user))
         {
             return NotFound();
         }
-
-        user.Username = formModel.Username;
-        user.Email = formModel.Email;
-        user.Password = formModel.Password;
-
-        dbContext.SaveChanges();
         return RedirectToAction(nameof(Index));
     }
 
     [HttpGet]
     public IActionResult Delete(int id)
     {
-        var user = dbContext.Users
-            .Include(user => user.Cars)!
-                .ThenInclude(car => car.FuelExpenses)
-            .Include(user => user.Cars)!
-                .ThenInclude(car => car.ServiceRecords)
-            .Include(user => user.Cars)!
-                .ThenInclude(car => car.Insurances)
-            .Include(user => user.Cars)!
-                .ThenInclude(car => car.CarTires)!
-                    .ThenInclude(carTire => carTire.Tire)
-            .Include(user => user.Cars)!
-                .ThenInclude(car => car.Expenses)
-            .FirstOrDefault(user => user.Id == id);
-
+        var user = repository.GetByIdWithDetails(id);
         return user is null ? NotFound() : View(user);
     }
 
@@ -104,27 +109,10 @@ public class UsersController(IUserRepository repository, CarExpesesDbContext dbC
     [ValidateAntiForgeryToken]
     public IActionResult DeleteConfirmed(int id)
     {
-        var user = dbContext.Users
-            .Include(user => user.Cars)!
-                .ThenInclude(car => car.FuelExpenses)
-            .Include(user => user.Cars)!
-                .ThenInclude(car => car.ServiceRecords)
-            .Include(user => user.Cars)!
-                .ThenInclude(car => car.Insurances)
-            .Include(user => user.Cars)!
-                .ThenInclude(car => car.CarTires)!
-                    .ThenInclude(carTire => carTire.Tire)
-            .Include(user => user.Cars)!
-                .ThenInclude(car => car.Expenses)
-            .FirstOrDefault(user => user.Id == id);
-
-        if (user is null)
+        if (!repository.Delete(id))
         {
             return NotFound();
         }
-
-        dbContext.Users.Remove(user);
-        dbContext.SaveChanges();
         return RedirectToAction(nameof(Index));
     }
 

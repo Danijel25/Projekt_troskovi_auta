@@ -1,6 +1,12 @@
 @model CarExpenses.Web.Models.CarFormViewModel
 @using CarExpenses.Model.Enums
 
+@{
+    var selectedUserLabel = Model.UserOptions.FirstOrDefault(option => option.Value == Model.UserId.ToString())?.Text ?? string.Empty;
+    var selectedUserValue = Model.UserId > 0 ? Model.UserId.ToString() : string.Empty;
+    var userLookupUrl = Url.Action("Search", "Lookups", new { source = "users" }) ?? string.Empty;
+}
+
 <section class="auto-form-container">
     <header class="auto-form-header">
         <div>
@@ -14,10 +20,19 @@
 
         <div class="auto-form-grid">
             <div class="auto-form-group auto-form-group-wide">
-                <label asp-for="UserId" class="auto-label"></label>
-                <select asp-for="UserId" asp-items="Model.UserOptions" class="auto-input auto-select">
-                    <option value="">Select owner</option>
-                </select>
+                <label class="auto-label" for="UserId_Display">@Html.DisplayNameFor(model => model.UserId)</label>
+                @await Html.PartialAsync("_AutocompleteDropdown", new AutocompleteDropdownViewModel
+                {
+                    InputId = "UserId_Display",
+                    HiddenInputId = "UserId",
+                    HiddenInputName = "UserId",
+                    LookupUrl = userLookupUrl,
+                    Placeholder = "Search owner",
+                    SelectedLabel = selectedUserLabel,
+                    SelectedValue = selectedUserValue,
+                    MinChars = 1,
+                    Limit = 25
+                })
                 <span asp-validation-for="UserId" class="text-danger"></span>
             </div>
 

@@ -15,4 +15,39 @@ public sealed class ExpenseCategoryRepository(CarExpesesDbContext dbContext) : I
         .Include(category => category.Expenses)
         .AsNoTracking()
         .FirstOrDefault(category => category.Id == id);
+
+    public void Add(ExpenseCategory category)
+    {
+        dbContext.ExpenseCategories.Add(category);
+        dbContext.SaveChanges();
+    }
+
+    public bool Update(ExpenseCategory category)
+    {
+        var existing = dbContext.ExpenseCategories.FirstOrDefault(item => item.Id == category.Id);
+        if (existing is null)
+        {
+            return false;
+        }
+
+        existing.Name = category.Name;
+        dbContext.SaveChanges();
+        return true;
+    }
+
+    public bool Delete(int id)
+    {
+        var category = dbContext.ExpenseCategories
+            .Include(item => item.Expenses)
+            .FirstOrDefault(item => item.Id == id);
+
+        if (category is null)
+        {
+            return false;
+        }
+
+        dbContext.ExpenseCategories.Remove(category);
+        dbContext.SaveChanges();
+        return true;
+    }
 }

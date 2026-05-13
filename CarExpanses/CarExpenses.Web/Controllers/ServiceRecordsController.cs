@@ -1,16 +1,41 @@
-using CarExpenses.DAL;
 using CarExpenses.DAL.Repositories;
 using CarExpenses.Model.Models;
 using CarExpenses.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 
 namespace CarExpenses.Web.Controllers;
 
-public class ServiceRecordsController(IServiceRecordRepository repository, ICarRepository carRepository, CarExpesesDbContext dbContext) : Controller
+public class ServiceRecordsController(IServiceRecordRepository repository, ICarRepository carRepository) : Controller
 {
     public IActionResult Index() => View(repository.GetAll());
+
+    [HttpGet]
+    public IActionResult Search(string? query)
+    {
+        var serviceRecords = repository.GetAll();
+
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return PartialView("_ServiceRecordList", serviceRecords);
+        }
+
+        var term = query.Trim();
+        var filtered = serviceRecords
+            .Where(record =>
+                record.ServiceType.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || record.Description.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || record.Cost.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
+                || record.ServiceDate.ToString("yyyy-MM-dd").Contains(term, StringComparison.OrdinalIgnoreCase)
+                || record.Mileage.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
+                || record.CarId.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
+                || record.Id.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
+                || (record.Car?.Brand?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
+                || (record.Car?.Model?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false))
+            .ToList();
+
+        return PartialView("_ServiceRecordList", filtered);
+    }
 
     public IActionResult Details(int id)
     {
@@ -30,7 +55,7 @@ public class ServiceRecordsController(IServiceRecordRepository repository, ICarR
             return View("Form", BuildFormModel(formModel));
         }
 
-        dbContext.ServiceRecords.Add(new ServiceRecord
+        repository.Add(new ServiceRecord
         {
             ServiceType = formModel.ServiceType,
             Description = formModel.Description,
@@ -39,15 +64,13 @@ public class ServiceRecordsController(IServiceRecordRepository repository, ICarR
             Mileage = formModel.Mileage,
             CarId = formModel.CarId
         });
-
-        dbContext.SaveChanges();
         return RedirectToAction(nameof(Index));
     }
 
     [HttpGet]
     public IActionResult Edit(int id)
     {
-        var serviceRecord = dbContext.ServiceRecords.AsNoTracking().FirstOrDefault(item => item.Id == id);
+        var serviceRecord = repository.GetById(id);
         return serviceRecord is null ? NotFound() : View("Form", BuildFormModel(serviceRecord));
     }
 
@@ -65,27 +88,28 @@ public class ServiceRecordsController(IServiceRecordRepository repository, ICarR
             return View("Form", BuildFormModel(formModel));
         }
 
-        var serviceRecord = dbContext.ServiceRecords.FirstOrDefault(item => item.Id == id);
-        if (serviceRecord is null)
+        var serviceRecord = new ServiceRecord
+        {
+            Id = formModel.Id,
+            ServiceType = formModel.ServiceType,
+            Description = formModel.Description,
+            Cost = formModel.Cost,
+            ServiceDate = formModel.ServiceDate,
+            Mileage = formModel.Mileage,
+            CarId = formModel.CarId
+        };
+
+        if (!repository.Update(serviceRecord))
         {
             return NotFound();
         }
-
-        serviceRecord.ServiceType = formModel.ServiceType;
-        serviceRecord.Description = formModel.Description;
-        serviceRecord.Cost = formModel.Cost;
-        serviceRecord.ServiceDate = formModel.ServiceDate;
-        serviceRecord.Mileage = formModel.Mileage;
-        serviceRecord.CarId = formModel.CarId;
-
-        dbContext.SaveChanges();
         return RedirectToAction(nameof(Index));
     }
 
     [HttpGet]
     public IActionResult Delete(int id)
     {
-        var serviceRecord = dbContext.ServiceRecords.Include(item => item.Car).FirstOrDefault(item => item.Id == id);
+        var serviceRecord = repository.GetById(id);
         return serviceRecord is null ? NotFound() : View(serviceRecord);
     }
 
@@ -93,14 +117,10 @@ public class ServiceRecordsController(IServiceRecordRepository repository, ICarR
     [ValidateAntiForgeryToken]
     public IActionResult DeleteConfirmed(int id)
     {
-        var serviceRecord = dbContext.ServiceRecords.Include(item => item.Car).FirstOrDefault(item => item.Id == id);
-        if (serviceRecord is null)
+        if (!repository.Delete(id))
         {
             return NotFound();
         }
-
-        dbContext.ServiceRecords.Remove(serviceRecord);
-        dbContext.SaveChanges();
         return RedirectToAction(nameof(Index));
     }
 

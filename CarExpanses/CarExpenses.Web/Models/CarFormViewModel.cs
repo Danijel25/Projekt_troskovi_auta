@@ -12,9 +12,11 @@ public class CarFormViewModel
     public int UserId { get; set; }
 
     [Required]
+    [StringLength(64)]
     public string Brand { get; set; } = string.Empty;
 
     [Required]
+    [StringLength(64)]
     public string Model { get; set; } = string.Empty;
 
     [Range(1950, 2100)]

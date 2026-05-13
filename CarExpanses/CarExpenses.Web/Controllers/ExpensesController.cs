@@ -1,16 +1,38 @@
-using CarExpenses.DAL;
 using CarExpenses.DAL.Repositories;
 using CarExpenses.Model.Models;
 using CarExpenses.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 
 namespace CarExpenses.Web.Controllers;
 
-public class ExpensesController(IExpenseRepository repository, IExpenseCategoryRepository categoryRepository, CarExpesesDbContext dbContext) : Controller
+public class ExpensesController(IExpenseRepository repository, IExpenseCategoryRepository categoryRepository) : Controller
 {
     public IActionResult Index() => View(repository.GetAll());
+
+    [HttpGet]
+    public IActionResult Search(string? query)
+    {
+        var expenses = repository.GetAll();
+
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return PartialView("_ExpenseList", expenses);
+        }
+
+        var term = query.Trim();
+        var filtered = expenses
+            .Where(expense =>
+                expense.Description.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || expense.Amount.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
+                || expense.Date.ToString("yyyy-MM-dd").Contains(term, StringComparison.OrdinalIgnoreCase)
+                || expense.Date.ToString("MM/dd").Contains(term, StringComparison.OrdinalIgnoreCase)
+                || expense.Id.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
+                || (expense.Category?.Name.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false))
+            .ToList();
+
+        return PartialView("_ExpenseList", filtered);
+    }
 
     public IActionResult Details(int id)
     {
@@ -30,23 +52,21 @@ public class ExpensesController(IExpenseRepository repository, IExpenseCategoryR
             return View("Form", BuildFormModel(formModel));
         }
 
-        dbContext.Expenses.Add(new Expense
+        repository.Add(new Expense
         {
             Description = formModel.Description,
             Amount = formModel.Amount,
             Date = formModel.Date,
             CategoryId = formModel.CategoryId,
-            Category = dbContext.ExpenseCategories.First(category => category.Id == formModel.CategoryId)
+            Category = null!
         });
-
-        dbContext.SaveChanges();
         return RedirectToAction(nameof(Index));
     }
 
     [HttpGet]
     public IActionResult Edit(int id)
     {
-        var expense = dbContext.Expenses.AsNoTracking().FirstOrDefault(item => item.Id == id);
+        var expense = repository.GetById(id);
         return expense is null ? NotFound() : View("Form", BuildFormModel(expense));
     }
 
@@ -64,26 +84,27 @@ public class ExpensesController(IExpenseRepository repository, IExpenseCategoryR
             return View("Form", BuildFormModel(formModel));
         }
 
-        var expense = dbContext.Expenses.FirstOrDefault(item => item.Id == id);
-        if (expense is null)
+        var expense = new Expense
+        {
+            Id = formModel.Id,
+            Description = formModel.Description,
+            Amount = formModel.Amount,
+            Date = formModel.Date,
+            CategoryId = formModel.CategoryId,
+            Category = null!
+        };
+
+        if (!repository.Update(expense))
         {
             return NotFound();
         }
-
-        expense.Description = formModel.Description;
-        expense.Amount = formModel.Amount;
-        expense.Date = formModel.Date;
-        expense.CategoryId = formModel.CategoryId;
-        expense.Category = dbContext.ExpenseCategories.First(category => category.Id == formModel.CategoryId);
-
-        dbContext.SaveChanges();
         return RedirectToAction(nameof(Index));
     }
 
     [HttpGet]
     public IActionResult Delete(int id)
     {
-        var expense = dbContext.Expenses.Include(item => item.Category).FirstOrDefault(item => item.Id == id);
+        var expense = repository.GetById(id);
         return expense is null ? NotFound() : View(expense);
     }
 
@@ -91,14 +112,10 @@ public class ExpensesController(IExpenseRepository repository, IExpenseCategoryR
     [ValidateAntiForgeryToken]
     public IActionResult DeleteConfirmed(int id)
     {
-        var expense = dbContext.Expenses.Include(item => item.Category).FirstOrDefault(item => item.Id == id);
-        if (expense is null)
+        if (!repository.Delete(id))
         {
             return NotFound();
         }
-
-        dbContext.Expenses.Remove(expense);
-        dbContext.SaveChanges();
         return RedirectToAction(nameof(Index));
     }
 

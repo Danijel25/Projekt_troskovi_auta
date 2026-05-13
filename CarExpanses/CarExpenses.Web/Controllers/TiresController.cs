@@ -1,17 +1,39 @@
-using CarExpenses.DAL;
 using CarExpenses.DAL.Repositories;
 using CarExpenses.Model.Models;
 using CarExpenses.Web.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace CarExpenses.Web.Controllers;
 
 [Route("gume")]
-public class TiresController(ITireRepository repository, CarExpesesDbContext dbContext) : Controller
+public class TiresController(ITireRepository repository) : Controller
 {
     [Route("[action]")]
     public IActionResult Index() => View(repository.GetAll());
+
+    [HttpGet]
+    [Route("pretraga")]
+    public IActionResult Search(string? query)
+    {
+        var tires = repository.GetAll();
+
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return PartialView("_TireList", tires);
+        }
+
+        var term = query.Trim();
+        var filtered = tires
+            .Where(tire =>
+                tire.Brand.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || tire.Model.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || tire.Season.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || tire.Price.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
+                || tire.Id.ToString().Contains(term, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        return PartialView("_TireList", filtered);
+    }
 
     [Route("detalji/{id}")]
     public IActionResult Details(int id)
@@ -34,15 +56,13 @@ public class TiresController(ITireRepository repository, CarExpesesDbContext dbC
             return View("Form", formModel);
         }
 
-        dbContext.Tires.Add(new Tire
+        repository.Add(new Tire
         {
             Brand = formModel.Brand,
             Model = formModel.Model,
             Season = formModel.Season,
             Price = formModel.Price
         });
-
-        dbContext.SaveChanges();
         return RedirectToAction(nameof(Index));
     }
 
@@ -50,7 +70,7 @@ public class TiresController(ITireRepository repository, CarExpesesDbContext dbC
     [Route("uredi/{id}")]
     public IActionResult Edit(int id)
     {
-        var tire = dbContext.Tires.AsNoTracking().FirstOrDefault(tire => tire.Id == id);
+        var tire = repository.GetById(id);
         return tire is null ? NotFound() : View("Form", new TireFormViewModel
         {
             Id = tire.Id,
@@ -76,18 +96,19 @@ public class TiresController(ITireRepository repository, CarExpesesDbContext dbC
             return View("Form", formModel);
         }
 
-        var tire = dbContext.Tires.FirstOrDefault(tire => tire.Id == id);
-        if (tire is null)
+        var tire = new Tire
+        {
+            Id = formModel.Id,
+            Brand = formModel.Brand,
+            Model = formModel.Model,
+            Season = formModel.Season,
+            Price = formModel.Price
+        };
+
+        if (!repository.Update(tire))
         {
             return NotFound();
         }
-
-        tire.Brand = formModel.Brand;
-        tire.Model = formModel.Model;
-        tire.Season = formModel.Season;
-        tire.Price = formModel.Price;
-
-        dbContext.SaveChanges();
         return RedirectToAction(nameof(Index));
     }
 
@@ -95,10 +116,7 @@ public class TiresController(ITireRepository repository, CarExpesesDbContext dbC
     [Route("obrisi/{id}")]
     public IActionResult Delete(int id)
     {
-        var tire = dbContext.Tires
-            .Include(tire => tire.CarTires)
-            .FirstOrDefault(tire => tire.Id == id);
-
+        var tire = repository.GetById(id);
         return tire is null ? NotFound() : View(tire);
     }
 
@@ -107,17 +125,10 @@ public class TiresController(ITireRepository repository, CarExpesesDbContext dbC
     [Route("obrisi/{id}")]
     public IActionResult DeleteConfirmed(int id)
     {
-        var tire = dbContext.Tires
-            .Include(tire => tire.CarTires)
-            .FirstOrDefault(tire => tire.Id == id);
-
-        if (tire is null)
+        if (!repository.Delete(id))
         {
             return NotFound();
         }
-
-        dbContext.Tires.Remove(tire);
-        dbContext.SaveChanges();
         return RedirectToAction(nameof(Index));
     }
 }

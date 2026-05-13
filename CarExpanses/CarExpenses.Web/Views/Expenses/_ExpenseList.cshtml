@@ -1,0 +1,33 @@
+@model IReadOnlyList<Expense>
+
+<section class="auto-grid" aria-label="Expenses list">
+    @if (Model.Count == 0)
+    {
+        <p class="auto-empty-state">No expenses found.</p>
+    }
+    else
+    {
+        foreach (var item in Model)
+        {
+            <article class="auto-card">
+                <div class="auto-card-badge">@item.Date.ToString("MM/dd")</div>
+                <div class="auto-card-content">
+                    <h2 class="auto-card-title">@item.Amount.ToString("C") <span>#@item.Id</span></h2>
+                    <dl class="auto-stats">
+                        <dt>Category</dt>
+                        <dd>@item.Category.Name</dd>
+                        <dt>Description</dt>
+                        <dd>@item.Description</dd>
+                    </dl>
+                </div>
+                <footer class="auto-card-actions">
+                    <div class="auto-action-group">
+                        <a asp-action="Details" asp-route-id="@item.Id" class="auto-btn auto-btn-primary" aria-label="View expense @item.Id">Details</a>
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="auto-btn auto-btn-ghost" aria-label="Edit expense @item.Id">Update</a>
+                        <a asp-action="Delete" asp-route-id="@item.Id" class="auto-btn auto-btn-danger" aria-label="Delete expense @item.Id">Delete</a>
+                    </div>
+                </footer>
+            </article>
+        }
+    }
+</section>

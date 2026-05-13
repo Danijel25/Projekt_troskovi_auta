@@ -1,6 +1,9 @@
 @model ExpenseFormViewModel
 @{
     var isCreate = Model.Id == 0;
+    var selectedCategoryLabel = Model.CategoryOptions.FirstOrDefault(option => option.Value == Model.CategoryId.ToString())?.Text ?? string.Empty;
+    var selectedCategoryValue = Model.CategoryId > 0 ? Model.CategoryId.ToString() : string.Empty;
+    var categoryLookupUrl = Url.Action("Search", "Lookups", new { source = "categories" }) ?? string.Empty;
 }
 
 <main class="auto-page-container">
@@ -21,10 +24,19 @@
                 <div asp-validation-summary="ModelOnly" class="text-danger auto-validation-summary"></div>
                 <div class="auto-form-grid">
                     <div class="auto-form-group auto-form-group-wide">
-                        <label asp-for="CategoryId" class="auto-label"></label>
-                        <select asp-for="CategoryId" asp-items="Model.CategoryOptions" class="auto-input auto-select">
-                            <option value="">Select category</option>
-                        </select>
+                        <label class="auto-label" for="CategoryId_Display">@Html.DisplayNameFor(model => model.CategoryId)</label>
+                        @await Html.PartialAsync("_AutocompleteDropdown", new AutocompleteDropdownViewModel
+                        {
+                            InputId = "CategoryId_Display",
+                            HiddenInputId = "CategoryId",
+                            HiddenInputName = "CategoryId",
+                            LookupUrl = categoryLookupUrl,
+                            Placeholder = "Search category",
+                            SelectedLabel = selectedCategoryLabel,
+                            SelectedValue = selectedCategoryValue,
+                            MinChars = 1,
+                            Limit = 25
+                        })
                         <span asp-validation-for="CategoryId" class="text-danger"></span>
                     </div>
                     <div class="auto-form-group auto-form-group-wide">

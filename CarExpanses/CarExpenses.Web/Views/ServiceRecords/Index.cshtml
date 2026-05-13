@@ -12,28 +12,16 @@
         <a asp-action="Create" class="auto-btn auto-btn-accent auto-btn-large">Add New Service Record</a>
     </header>
 
-    <section class="auto-grid" aria-label="Service records list">
-        @foreach (var item in Model)
-        {
-            <article class="auto-card">
-                <div class="auto-card-badge">Car @item.CarId</div>
-                <div class="auto-card-content">
-                    <h2 class="auto-card-title">@item.ServiceType <span>#@item.Id</span></h2>
-                    <dl class="auto-stats">
-                        <dt>Cost</dt>
-                        <dd>@item.Cost.ToString("C")</dd>
-                        <dt>Date</dt>
-                        <dd>@item.ServiceDate.ToString("yyyy-MM-dd")</dd>
-                    </dl>
-                </div>
-                <footer class="auto-card-actions">
-                    <div class="auto-action-group">
-                        <a asp-action="Details" asp-route-id="@item.Id" class="auto-btn auto-btn-primary" aria-label="View service record @item.Id">Details</a>
-                        <a asp-action="Edit" asp-route-id="@item.Id" class="auto-btn auto-btn-ghost" aria-label="Edit service record @item.Id">Update</a>
-                        <a asp-action="Delete" asp-route-id="@item.Id" class="auto-btn auto-btn-danger" aria-label="Delete service record @item.Id">Delete</a>
-                    </div>
-                </footer>
-            </article>
-        }
-    </section>
+    <div class="auto-search" data-ajax-search data-search-url="@Url.Action("Search")" data-search-target="#service-records-list">
+        <label class="auto-label" for="service-records-search">Search service records</label>
+        <div class="auto-search-row">
+            <input id="service-records-search" type="search" class="auto-input auto-search-input" placeholder="Search by service, car, or date" data-search-input />
+            <button type="button" class="auto-btn auto-btn-ghost auto-search-clear" data-search-clear>Clear</button>
+        </div>
+        <p class="auto-search-status" data-search-status aria-live="polite"></p>
+    </div>
+
+    <div id="service-records-list" class="auto-search-results" aria-live="polite">
+        @await Html.PartialAsync("_ServiceRecordList", Model)
+    </div>
 </main>

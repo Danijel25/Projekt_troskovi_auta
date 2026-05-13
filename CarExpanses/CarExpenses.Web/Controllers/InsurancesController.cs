@@ -1,16 +1,41 @@
-using CarExpenses.DAL;
 using CarExpenses.DAL.Repositories;
 using CarExpenses.Model.Models;
 using CarExpenses.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 
 namespace CarExpenses.Web.Controllers;
 
-public class InsurancesController(IInsuranceRepository repository, ICarRepository carRepository, CarExpesesDbContext dbContext) : Controller
+public class InsurancesController(IInsuranceRepository repository, ICarRepository carRepository) : Controller
 {
     public IActionResult Index() => View(repository.GetAll());
+
+    [HttpGet]
+    public IActionResult Search(string? query)
+    {
+        var insurances = repository.GetAll();
+
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return PartialView("_InsuranceList", insurances);
+        }
+
+        var term = query.Trim();
+        var filtered = insurances
+            .Where(insurance =>
+                insurance.Company.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || insurance.InsuranceType.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || insurance.Price.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
+                || insurance.StartDate.ToString("yyyy-MM-dd").Contains(term, StringComparison.OrdinalIgnoreCase)
+                || insurance.EndDate.ToString("yyyy-MM-dd").Contains(term, StringComparison.OrdinalIgnoreCase)
+                || insurance.CarId.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
+                || insurance.Id.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
+                || (insurance.Car?.Brand?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
+                || (insurance.Car?.Model?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false))
+            .ToList();
+
+        return PartialView("_InsuranceList", filtered);
+    }
 
     public IActionResult Details(int id)
     {
@@ -30,7 +55,7 @@ public class InsurancesController(IInsuranceRepository repository, ICarRepositor
             return View("Form", BuildFormModel(formModel));
         }
 
-        dbContext.Insurances.Add(new Insurance
+        repository.Add(new Insurance
         {
             Company = formModel.Company,
             InsuranceType = formModel.InsuranceType,
@@ -39,15 +64,13 @@ public class InsurancesController(IInsuranceRepository repository, ICarRepositor
             EndDate = formModel.EndDate,
             CarId = formModel.CarId
         });
-
-        dbContext.SaveChanges();
         return RedirectToAction(nameof(Index));
     }
 
     [HttpGet]
     public IActionResult Edit(int id)
     {
-        var insurance = dbContext.Insurances.AsNoTracking().FirstOrDefault(item => item.Id == id);
+        var insurance = repository.GetById(id);
         return insurance is null ? NotFound() : View("Form", BuildFormModel(insurance));
     }
 
@@ -65,27 +88,28 @@ public class InsurancesController(IInsuranceRepository repository, ICarRepositor
             return View("Form", BuildFormModel(formModel));
         }
 
-        var insurance = dbContext.Insurances.FirstOrDefault(item => item.Id == id);
-        if (insurance is null)
+        var insurance = new Insurance
+        {
+            Id = formModel.Id,
+            Company = formModel.Company,
+            InsuranceType = formModel.InsuranceType,
+            Price = formModel.Price,
+            StartDate = formModel.StartDate,
+            EndDate = formModel.EndDate,
+            CarId = formModel.CarId
+        };
+
+        if (!repository.Update(insurance))
         {
             return NotFound();
         }
-
-        insurance.Company = formModel.Company;
-        insurance.InsuranceType = formModel.InsuranceType;
-        insurance.Price = formModel.Price;
-        insurance.StartDate = formModel.StartDate;
-        insurance.EndDate = formModel.EndDate;
-        insurance.CarId = formModel.CarId;
-
-        dbContext.SaveChanges();
         return RedirectToAction(nameof(Index));
     }
 
     [HttpGet]
     public IActionResult Delete(int id)
     {
-        var insurance = dbContext.Insurances.Include(item => item.Car).FirstOrDefault(item => item.Id == id);
+        var insurance = repository.GetById(id);
         return insurance is null ? NotFound() : View(insurance);
     }
 
@@ -93,14 +117,10 @@ public class InsurancesController(IInsuranceRepository repository, ICarRepositor
     [ValidateAntiForgeryToken]
     public IActionResult DeleteConfirmed(int id)
     {
-        var insurance = dbContext.Insurances.Include(item => item.Car).FirstOrDefault(item => item.Id == id);
-        if (insurance is null)
+        if (!repository.Delete(id))
         {
             return NotFound();
         }
-
-        dbContext.Insurances.Remove(insurance);
-        dbContext.SaveChanges();
         return RedirectToAction(nameof(Index));
     }
 
