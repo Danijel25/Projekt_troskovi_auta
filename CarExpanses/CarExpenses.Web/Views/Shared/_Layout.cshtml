@@ -6,10 +6,28 @@
     <title>@ViewData["Title"] - CarExpenses</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <partial name="_FlatpickrPartial" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/CarExpenses.Web.styles.css" asp-append-version="true" />
 </head>
 <body>
+    <div id="ce-loader-overlay" class="ce-loader-overlay" aria-live="polite" aria-busy="true" aria-label="Loading application">
+        <div class="ce-loader-shell">
+            <svg id="ce-loader-tire" class="ce-loader-tire" viewBox="0 0 100 100" width="96" height="96" role="img" aria-label="Loading">
+                <circle cx="50" cy="50" r="46" fill="#1c1a17" />
+                <circle cx="50" cy="50" r="40" fill="#26211c" />
+                <circle cx="50" cy="50" r="44" fill="none" stroke="#eca414" stroke-width="3" stroke-dasharray="6 5" />
+                <circle cx="50" cy="50" r="28" fill="#fdf8ee" stroke="#1c1a17" stroke-width="3" />
+                <circle cx="50" cy="50" r="10" fill="#eca414" stroke="#1c1a17" stroke-width="2" />
+                <line x1="50" y1="16" x2="50" y2="32" stroke="#f7f0df" stroke-width="6" stroke-linecap="round" />
+                <line x1="50" y1="84" x2="50" y2="68" stroke="#f7f0df" stroke-width="6" stroke-linecap="round" />
+                <line x1="16" y1="50" x2="32" y2="50" stroke="#f7f0df" stroke-width="6" stroke-linecap="round" />
+                <line x1="84" y1="50" x2="68" y2="50" stroke="#f7f0df" stroke-width="6" stroke-linecap="round" />
+            </svg>
+            <div class="ce-loader-label">Loading</div>
+        </div>
+    </div>
+    <script src="~/js/loader.js" asp-append-version="true"></script>
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
