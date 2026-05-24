@@ -66,6 +66,8 @@ public sealed class UserRepository(CarExpesesDbContext dbContext) : IUserReposit
                 .ThenInclude(car => car.CarTires)!
                     .ThenInclude(carTire => carTire.Tire)
             .Include(item => item.Cars)!
+                .ThenInclude(car => car.CarFiles)
+            .Include(item => item.Cars)!
                 .ThenInclude(car => car.Expenses)
             .FirstOrDefault(item => item.Id == id);
 

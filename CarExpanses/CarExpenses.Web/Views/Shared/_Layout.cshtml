@@ -9,6 +9,7 @@
     <partial name="_FlatpickrPartial" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/CarExpenses.Web.styles.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
     <div id="ce-loader-overlay" class="ce-loader-overlay" aria-live="polite" aria-busy="true" aria-label="Loading application">

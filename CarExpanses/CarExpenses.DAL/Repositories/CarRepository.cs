@@ -58,6 +58,7 @@ public sealed class CarRepository(CarExpesesDbContext dbContext) : ICarRepositor
             .Include(item => item.Insurances)
             .Include(item => item.CarTires!)
                 .ThenInclude(carTire => carTire.Tire)
+            .Include(item => item.CarFiles)
             .Include(item => item.Expenses!)
                 .ThenInclude(expense => expense.Category)
             .FirstOrDefault(item => item.Id == id);

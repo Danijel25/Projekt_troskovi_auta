@@ -1094,3 +1094,144 @@ span.flatpickr-weekday {
 .flatpickr-alt-input.auto-input {
   background-image: linear-gradient(120deg, rgba(236, 164, 20, 0.08), rgba(200, 42, 42, 0.08));
 }
+
+/* ========================================================
+   FILE UPLOAD & ATTACHMENTS
+   ======================================================== */
+.auto-file-upload-area {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  background-color: var(--auto-paper);
+  border: var(--auto-border-thick);
+  border-radius: var(--auto-radius);
+  padding: 1.5rem;
+  box-shadow: var(--auto-shadow-solid);
+}
+
+.dropzone.auto-dropzone {
+  border: 3px dashed var(--auto-dark);
+  background-color: var(--auto-cream);
+  padding: 3rem 1.5rem;
+  border-radius: var(--auto-radius);
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.dropzone.auto-dropzone:hover,
+.dropzone.auto-dropzone.dz-drag-hover {
+  background-color: var(--auto-yellow);
+  border-color: var(--auto-dark);
+}
+
+.dropzone.auto-dropzone .dz-message {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.auto-upload-icon {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--auto-dark);
+}
+
+.auto-upload-text {
+  font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--auto-dark);
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.auto-file-status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.5rem;
+  border-bottom: var(--auto-border-thin);
+}
+
+.auto-status-text {
+  font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--auto-dark);
+  text-transform: uppercase;
+}
+
+.auto-file-list {
+  margin-top: 1rem;
+}
+
+.auto-file-list .auto-list-item {
+  align-items: center;
+  background-color: var(--auto-cream);
+  border: var(--auto-border-thin);
+  margin-bottom: 0.5rem;
+  border-radius: var(--auto-radius);
+  transition: transform 0.1s ease;
+}
+
+.auto-file-list .auto-list-item:hover {
+  transform: translateX(4px);
+}
+
+.auto-file-name {
+  font-weight: 800;
+  color: var(--auto-dark);
+  text-decoration: none;
+}
+
+.auto-file-name:hover,
+.auto-file-name:focus-visible {
+  color: var(--auto-red);
+  text-decoration: underline;
+}
+
+.auto-file-meta {
+  font-size: 0.85rem;
+  color: #3d3731;
+}
+
+.auto-btn-delete {
+  background-color: var(--auto-red);
+  color: var(--auto-cream);
+  border: var(--auto-border-thin);
+  padding: 0.25rem 0.75rem;
+  font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  border-radius: var(--auto-radius);
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--auto-dark);
+}
+
+.auto-btn-delete:hover {
+  background-color: var(--auto-red-hover);
+  transform: translateY(1px);
+  box-shadow: 1px 1px 0 var(--auto-dark);
+}
+
+.auto-btn-delete:focus-visible {
+  outline: 2px solid var(--auto-yellow);
+  outline-offset: 2px;
+}
+
+.auto-file-empty {
+  padding: 0.75rem;
+  font-weight: 600;
+  color: #6b6254;
+}
+
+@media (max-width: 768px) {
+  .auto-file-status-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+}

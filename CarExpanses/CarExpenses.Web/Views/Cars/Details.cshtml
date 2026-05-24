@@ -206,5 +206,41 @@
                 </section>
             </div>
         </section>
+
+        <section class="auto-related-section" aria-label="Vehicle Attachments">
+            <h2 class="auto-panel-heading">Attachments</h2>
+
+            <div class="auto-file-upload-area"
+                 data-car-files
+                 data-upload-url="/api/cars/@Model.Id/files"
+                 data-list-url="/api/cars/@Model.Id/files"
+                 data-delete-url="/api/cars/@Model.Id/files">
+
+                <form action="/api/cars/@Model.Id/files" class="dropzone auto-dropzone" data-dropzone>
+                    <div class="dz-message">
+                        <span class="auto-upload-icon" aria-hidden="true">[ + ]</span>
+                        <p class="auto-upload-text">Drop files here or click to upload.</p>
+                    </div>
+                </form>
+
+                <div class="auto-file-status-bar">
+                    <span class="auto-status-text" data-file-status>Ready</span>
+                    <span class="auto-chip" data-file-count aria-label="0 total files">0</span>
+                </div>
+
+                <div class="auto-card-body">
+                    <ul class="auto-compact-list auto-file-list" data-file-list role="list">
+                    </ul>
+                </div>
+            </div>
+        </section>
     </article>
 </main>
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.css" />
+}
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js"></script>
+}

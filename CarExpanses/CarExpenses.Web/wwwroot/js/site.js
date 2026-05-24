@@ -308,8 +308,187 @@
 		});
 	};
 
+	const initCarFiles = (container) => {
+		const list = container.querySelector("[data-file-list]");
+		const status = container.querySelector("[data-file-status]");
+		const count = container.querySelector("[data-file-count]");
+		const dropzoneElement = container.querySelector("[data-dropzone]");
+		const uploadUrl = container.getAttribute("data-upload-url");
+		const listUrl = container.getAttribute("data-list-url");
+		const deleteUrl = container.getAttribute("data-delete-url");
+
+		if (!list || !listUrl) {
+			return;
+		}
+
+		const setStatus = (message) => {
+			if (status) {
+				status.textContent = message || "";
+			}
+		};
+
+		const setCount = (value) => {
+			if (count) {
+				count.textContent = value.toString();
+			}
+		};
+
+		const formatFileSize = (size) => {
+			if (size < 1024) {
+				return `${size} B`;
+			}
+			if (size < 1024 * 1024) {
+				return `${(size / 1024).toFixed(1)} KB`;
+			}
+			return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+		};
+
+		const formatDate = (value) => {
+			const date = new Date(value);
+			if (Number.isNaN(date.getTime())) {
+				return "";
+			}
+			return date.toLocaleString();
+		};
+
+		const buildFileItem = (file) => {
+			const item = document.createElement("li");
+			item.className = "auto-list-item";
+
+			const primary = document.createElement("div");
+			primary.className = "auto-item-primary";
+
+			const link = document.createElement("a");
+			link.className = "auto-file-name";
+			link.href = file.url || "#";
+			link.target = "_blank";
+			link.rel = "noopener";
+			link.textContent = file.fileName || "Attachment";
+
+			const deleteButton = document.createElement("button");
+			deleteButton.type = "button";
+			deleteButton.className = "auto-btn-delete";
+			deleteButton.textContent = "Delete";
+			deleteButton.setAttribute("data-delete-file", file.id);
+
+			primary.appendChild(link);
+			primary.appendChild(deleteButton);
+
+			const meta = document.createElement("div");
+			meta.className = "auto-file-meta";
+			const sizeLabel = formatFileSize(file.fileSize || 0);
+			const dateLabel = formatDate(file.uploadedAt);
+			meta.textContent = dateLabel ? `${sizeLabel} | ${dateLabel}` : sizeLabel;
+
+			item.appendChild(primary);
+			item.appendChild(meta);
+
+			return item;
+		};
+
+		const renderFiles = (files) => {
+			list.innerHTML = "";
+			setCount(files.length);
+
+			if (!files.length) {
+				const empty = document.createElement("li");
+				empty.className = "auto-file-empty";
+				empty.textContent = "No attachments uploaded yet.";
+				list.appendChild(empty);
+				return;
+			}
+
+			files.forEach((file) => {
+				list.appendChild(buildFileItem(file));
+			});
+		};
+
+		const fetchFiles = () => {
+			setStatus("Loading files...");
+			return fetch(listUrl, {
+				headers: {
+					"X-Requested-With": "XMLHttpRequest"
+				}
+			})
+				.then((response) => {
+					if (!response.ok) {
+						throw new Error(`File list failed: ${response.status}`);
+					}
+					return response.json();
+				})
+				.then((data) => {
+					const files = Array.isArray(data) ? data : [];
+					renderFiles(files);
+					setStatus(files.length ? "" : "Ready");
+				})
+				.catch(() => {
+					setStatus("Failed to load attachments.");
+				});
+		};
+
+		const handleDelete = (fileId) => {
+			if (!deleteUrl) {
+				return;
+			}
+			setStatus("Deleting file...");
+			fetch(`${deleteUrl}/${fileId}`, {
+				method: "DELETE",
+				headers: {
+					"X-Requested-With": "XMLHttpRequest"
+				}
+			})
+				.then((response) => {
+					if (!response.ok) {
+						throw new Error(`Delete failed: ${response.status}`);
+					}
+					return fetchFiles();
+				})
+				.catch(() => {
+					setStatus("Failed to delete file.");
+				});
+		};
+
+		list.addEventListener("click", (event) => {
+			const target = event.target.closest("[data-delete-file]");
+			if (!target) {
+				return;
+			}
+			const fileId = Number(target.getAttribute("data-delete-file"));
+			if (Number.isNaN(fileId)) {
+				return;
+			}
+			handleDelete(fileId);
+		});
+
+		fetchFiles();
+
+		if (dropzoneElement && window.Dropzone && uploadUrl) {
+			Dropzone.autoDiscover = false;
+			const dropzone = new Dropzone(dropzoneElement, {
+				url: uploadUrl,
+				paramName: "file",
+				uploadMultiple: true,
+				parallelUploads: 4,
+				maxFilesize: 25
+			});
+
+			dropzone.on("queuecomplete", () => {
+				fetchFiles();
+			});
+
+			dropzone.on("error", () => {
+				setStatus("Upload failed. Please try again.");
+			});
+
+			dropzone.on("sending", () => {
+				setStatus("Uploading...");
+			});
+		}
+	};
+
 	document.addEventListener("DOMContentLoaded", () => {
 		document.querySelectorAll("[data-ajax-search]").forEach(initAjaxSearch);
 		document.querySelectorAll("[data-autocomplete-dropdown]").forEach(initAutocompleteDropdown);
+		document.querySelectorAll("[data-car-files]").forEach(initCarFiles);
 	});
 })();

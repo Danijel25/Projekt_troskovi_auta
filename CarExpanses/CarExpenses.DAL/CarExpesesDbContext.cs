@@ -18,6 +18,7 @@ public class CarExpesesDbContext : DbContext
 
     public DbSet<User> Users { get; set; }
     public DbSet<Car> Cars { get; set; }
+    public DbSet<CarFile> CarFiles { get; set; }
     public DbSet<Tire> Tires { get; set; }
     public DbSet<CarTire> CarTires { get; set; }
     public DbSet<FuelExpense> FuelExpenses { get; set; }

@@ -25,5 +25,6 @@ public class Car : ISoftDeleate
     public virtual ICollection<Insurance>? Insurances { get; set; } = new List<Insurance>();
     public virtual ICollection<CarTire>? CarTires { get; set; } = new List<CarTire>();
     public virtual ICollection<Expense>? Expenses { get; set; } = new List<Expense>();
+    public virtual ICollection<CarFile>? CarFiles { get; set; } = new List<CarFile>();
     public DateTime? DeleatedAt { get; set; }
 }
