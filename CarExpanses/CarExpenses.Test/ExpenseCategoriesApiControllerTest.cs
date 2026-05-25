@@ -48,7 +48,6 @@ namespace CarExpenses.Test
             // Arrange
             using var scope = _factory.Services.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<CarExpesesDbContext>();
-            dbContext.Expenses.RemoveRange(dbContext.Expenses.IgnoreQueryFilters());
             dbContext.ExpenseCategories.RemoveRange(dbContext.ExpenseCategories.IgnoreQueryFilters());
             await dbContext.SaveChangesAsync();
             // Act

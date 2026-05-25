@@ -19,6 +19,7 @@ public class CustomWebApplicationFactory<TProgram>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        var databaseName = $"CarExpesesDbTest_{Guid.NewGuid()}";
         builder.ConfigureServices(services => {
             var dbContextDescriptor = services.SingleOrDefault(
                 d => d.ServiceType ==
@@ -33,13 +34,13 @@ public class CustomWebApplicationFactory<TProgram>
             services.Remove(dbConnectionDescriptor);
 
             services.AddDbContext<CarExpesesDbContext>(options =>
-                { options.UseInMemoryDatabase("CarExpesesDbTest"); });
+                { options.UseInMemoryDatabase(databaseName); });
             }
         );
 
         builder.ConfigureAppConfiguration((context, config) => { 
             var testSettings = new Dictionary<string, string> { 
-                ["ConnectionStrings:DefaultConnection"] = "CarExpesesDbTest", 
+                ["ConnectionStrings:DefaultConnection"] = databaseName, 
                 ["GoogleClientId"] = "test-google-client-id", 
                 ["GoogleClientSecret"] = "test-google-client-secret" }; 
             config.AddInMemoryCollection(testSettings); 
