@@ -41,10 +41,6 @@ if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(goo
             options.ClientId = googleClientId;
             options.ClientSecret = googleClientSecret;
             options.CallbackPath = "/signin-google";
-            // options.ProtocolValidator = new()
-            // {
-            //     RequireNonce = false
-            // };            
         });
 }
 builder.Services.ConfigureApplicationCookie(options =>

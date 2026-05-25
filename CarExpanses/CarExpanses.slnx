@@ -1,5 +1,6 @@
 <Solution>
-  <Project Path="CarExpenses.Web/CarExpenses.Web.csproj" />
-  <Project Path="CarExpenses.Model/CarExpenses.Model.csproj" />
   <Project Path="CarExpenses.DAL/CarExpenses.DAL.csproj" />
+  <Project Path="CarExpenses.Model/CarExpenses.Model.csproj" />
+  <Project Path="CarExpenses.Test/CarExpenses.Test.csproj" Id="403509f5-e7b2-4dfc-a37d-9fb432f5f7a2" />
+  <Project Path="CarExpenses.Web/CarExpenses.Web.csproj" />
 </Solution>

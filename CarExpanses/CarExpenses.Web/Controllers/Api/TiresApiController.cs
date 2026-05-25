@@ -109,7 +109,7 @@ public sealed class TiresApiController : ControllerBase
         tire.Model = dto.Model;
         tire.Season = dto.Season;
         tire.Price = dto.Price;
-
+        dbContext.Tires.Update(tire);
         await dbContext.SaveChangesAsync();
         return NoContent();
     }
