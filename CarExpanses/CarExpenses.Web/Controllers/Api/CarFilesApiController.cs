@@ -3,11 +3,13 @@ using CarExpenses.Model.Models;
 using CarExpenses.Web.Api.Dtos;
 using CarExpenses.Web.Api.Mapping;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarExpenses.Web.Controllers.Api;
 
+[Authorize]
 [ApiController]
 [Route("api/cars/{carId:int}/files")]
 public sealed class CarFilesApiController : ControllerBase

@@ -1,121 +1,94 @@
-using CarExpenses.DAL.Repositories;
 using CarExpenses.Model.Models;
-using CarExpenses.Web.Models;
+using CarExpenses.Model.Security;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace CarExpenses.Web.Controllers;
 
-public class UsersController(IUserRepository repository) : Controller
+[Authorize(Roles = AppRoles.Admin)]
+public class UsersController(UserManager<User> userManager) : Controller
 {
-    public IActionResult Index() => View(repository.GetAll());
+    public async Task<IActionResult> Index()
+    {
+        var users = await userManager.Users
+            .Include(user => user.Cars)
+            .AsNoTracking()
+            .OrderBy(user => user.Id)
+            .ToListAsync();
+
+        return View(users);
+    }
 
     [HttpGet]
-    public IActionResult Search(string? query)
+    public async Task<IActionResult> Search(string? query)
     {
-        var users = repository.GetAll();
+        var users = userManager.Users
+            .Include(user => user.Cars)
+            .AsNoTracking()
+            .AsQueryable();
 
         if (string.IsNullOrWhiteSpace(query))
         {
-            return PartialView("_UserList", users);
+            return PartialView("_UserList", await users.ToListAsync());
         }
 
         var term = query.Trim();
-        var filtered = users
+        var filtered = await users
             .Where(user =>
-                user.Username.Contains(term, StringComparison.OrdinalIgnoreCase)
-                || user.Email.Contains(term, StringComparison.OrdinalIgnoreCase)
-                || user.Id.ToString().Contains(term, StringComparison.OrdinalIgnoreCase))
-            .ToList();
+                (user.UserName != null && user.UserName.Contains(term))
+                || (user.Email != null && user.Email.Contains(term))
+                || user.Id.ToString().Contains(term))
+            .ToListAsync();
 
         return PartialView("_UserList", filtered);
     }
 
-    public IActionResult Details(int id)
+    public async Task<IActionResult> Details(int id)
     {
-        var user = repository.GetById(id);
+        var user = await userManager.Users
+            .Include(item => item.Cars)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(item => item.Id == id);
+
         return user is null ? NotFound() : View(user);
     }
-    [HttpGet]
-    public IActionResult Create() => View("Form", new UserFormViewModel());
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public IActionResult Create(UserFormViewModel formModel)
-    {
-        if (!ModelState.IsValid)
-        {
-            return View("Form", formModel);
-        }
-
-        repository.Add(new User
-        {
-            Username = formModel.Username,
-            Email = formModel.Email,
-            Password = formModel.Password
-        });
-        return RedirectToAction(nameof(Index));
-    }
 
     [HttpGet]
-    public IActionResult Edit(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        var user = repository.GetById(id);
-        return user is null ? NotFound() : View("Form", new UserFormViewModel
-        {
-            Id = user.Id,
-            Username = user.Username,
-            Email = user.Email,
-            Password = user.Password
-        });
-    }
+        var user = await userManager.Users
+            .Include(item => item.Cars)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(item => item.Id == id);
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public IActionResult Edit(int id, UserFormViewModel formModel)
-    {
-        if (id != formModel.Id)
-        {
-            return BadRequest();
-        }
-
-        if (!ModelState.IsValid)
-        {
-            return View("Form", formModel);
-        }
-
-        var user = new User
-        {
-            Id = formModel.Id,
-            Username = formModel.Username,
-            Email = formModel.Email,
-            Password = formModel.Password
-        };
-
-        if (!repository.Update(user))
-        {
-            return NotFound();
-        }
-        return RedirectToAction(nameof(Index));
-    }
-
-    [HttpGet]
-    public IActionResult Delete(int id)
-    {
-        var user = repository.GetByIdWithDetails(id);
         return user is null ? NotFound() : View(user);
     }
 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public IActionResult DeleteConfirmed(int id)
+    public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        if (!repository.Delete(id))
+        var user = await userManager.FindByIdAsync(id.ToString());
+        if (user is null)
         {
             return NotFound();
         }
+
+        var result = await userManager.DeleteAsync(user);
+        if (!result.Succeeded)
+        {
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
+            return View(user);
+        }
+
         return RedirectToAction(nameof(Index));
     }
-
 }
 
 

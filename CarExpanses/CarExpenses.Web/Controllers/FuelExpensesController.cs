@@ -1,11 +1,13 @@
 using CarExpenses.DAL.Repositories;
 using CarExpenses.Model.Models;
 using CarExpenses.Web.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace CarExpenses.Web.Controllers;
 
+[Authorize]
 [Route("troskovi-goriva/[action]")]
 public class FuelExpensesController(IFuelExpenseRepository repository, ICarRepository carRepository) : Controller
 {
@@ -56,6 +58,12 @@ public class FuelExpensesController(IFuelExpenseRepository repository, ICarRepos
             return View("Form", BuildFormModel(formModel));
         }
 
+        if (carRepository.GetById(formModel.CarId) is null)
+        {
+            ModelState.AddModelError(nameof(formModel.CarId), "Car not found.");
+            return View("Form", BuildFormModel(formModel));
+        }
+
         repository.Add(new FuelExpense
         {
             FuelExpenseDate = formModel.FuelExpenseDate,
@@ -85,6 +93,12 @@ public class FuelExpensesController(IFuelExpenseRepository repository, ICarRepos
 
         if (!ModelState.IsValid)
         {
+            return View("Form", BuildFormModel(formModel));
+        }
+
+        if (carRepository.GetById(formModel.CarId) is null)
+        {
+            ModelState.AddModelError(nameof(formModel.CarId), "Car not found.");
             return View("Form", BuildFormModel(formModel));
         }
 

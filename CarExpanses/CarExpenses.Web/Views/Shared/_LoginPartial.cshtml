@@ -1,0 +1,16 @@
+@using CarExpenses.Model.Security
+
+@if (User.Identity?.IsAuthenticated ?? false)
+{
+    <form asp-controller="Account" asp-action="Logout" method="post" class="d-flex align-items-center gap-3">
+        <span class="auto-nav-username">@User.Identity?.Name</span>
+        <button type="submit" class="auto-btn auto-btn-ghost auto-btn-nav">Logout</button>
+    </form>
+}
+else
+{
+    <div class="d-flex align-items-center gap-2">
+        <a asp-controller="Account" asp-action="Login" class="auto-btn auto-btn-ghost auto-btn-nav">Login</a>
+        <a asp-controller="Account" asp-action="Register" class="auto-btn auto-btn-primary auto-btn-nav">Register</a>
+    </div>
+}

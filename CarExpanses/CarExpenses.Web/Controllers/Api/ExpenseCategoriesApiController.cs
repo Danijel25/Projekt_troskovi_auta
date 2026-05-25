@@ -1,12 +1,15 @@
 using CarExpenses.DAL;
 using CarExpenses.Model.Models;
+using CarExpenses.Model.Security;
 using CarExpenses.Web.Api.Dtos;
 using CarExpenses.Web.Api.Mapping;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarExpenses.Web.Controllers.Api;
 
+[Authorize]
 [ApiController]
 [Route("api/expense-categories")]
 public sealed class ExpenseCategoriesApiController : ControllerBase
@@ -50,6 +53,7 @@ public sealed class ExpenseCategoriesApiController : ControllerBase
         return Ok(DtoMapping.ToDetailDto(category));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPost]
     public async Task<ActionResult<ExpenseCategoryDetailDto>> Create(ExpenseCategoryCreateDto dto)
     {
@@ -69,6 +73,7 @@ public sealed class ExpenseCategoriesApiController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = category.Id }, DtoMapping.ToDetailDto(created));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, ExpenseCategoryUpdateDto dto)
     {
@@ -84,6 +89,7 @@ public sealed class ExpenseCategoriesApiController : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {

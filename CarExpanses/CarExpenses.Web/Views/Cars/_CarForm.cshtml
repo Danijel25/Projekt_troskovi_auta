@@ -1,9 +1,13 @@
 @model CarExpenses.Web.Models.CarFormViewModel
 @using CarExpenses.Model.Enums
+@using CarExpenses.Model.Security
 
 @{
-    var selectedUserLabel = Model.UserOptions.FirstOrDefault(option => option.Value == Model.UserId.ToString())?.Text ?? string.Empty;
-    var selectedUserValue = Model.UserId > 0 ? Model.UserId.ToString() : string.Empty;
+    var isAdmin = User.IsInRole(AppRoles.Admin);
+    var selectedUserLabel = isAdmin
+        ? Model.UserOptions.FirstOrDefault(option => option.Value == Model.UserId.ToString())?.Text ?? string.Empty
+        : string.Empty;
+    var selectedUserValue = isAdmin && Model.UserId > 0 ? Model.UserId.ToString() : string.Empty;
     var userLookupUrl = Url.Action("Search", "Lookups", new { source = "users" }) ?? string.Empty;
 }
 
@@ -19,22 +23,29 @@
         <div asp-validation-summary="ModelOnly" class="text-danger auto-validation-summary"></div>
 
         <div class="auto-form-grid">
-            <div class="auto-form-group auto-form-group-wide">
-                <label class="auto-label" for="UserId_Display">@Html.DisplayNameFor(model => model.UserId)</label>
-                @await Html.PartialAsync("_AutocompleteDropdown", new AutocompleteDropdownViewModel
-                {
-                    InputId = "UserId_Display",
-                    HiddenInputId = "UserId",
-                    HiddenInputName = "UserId",
-                    LookupUrl = userLookupUrl,
-                    Placeholder = "Search owner",
-                    SelectedLabel = selectedUserLabel,
-                    SelectedValue = selectedUserValue,
-                    MinChars = 1,
-                    Limit = 25
-                })
-                <span asp-validation-for="UserId" class="text-danger"></span>
-            </div>
+            @if (isAdmin)
+            {
+                <div class="auto-form-group auto-form-group-wide">
+                    <label class="auto-label" for="UserId_Display">@Html.DisplayNameFor(model => model.UserId)</label>
+                    @await Html.PartialAsync("_AutocompleteDropdown", new AutocompleteDropdownViewModel
+                    {
+                        InputId = "UserId_Display",
+                        HiddenInputId = "UserId",
+                        HiddenInputName = "UserId",
+                        LookupUrl = userLookupUrl,
+                        Placeholder = "Search owner",
+                        SelectedLabel = selectedUserLabel,
+                        SelectedValue = selectedUserValue,
+                        MinChars = 1,
+                        Limit = 25
+                    })
+                    <span asp-validation-for="UserId" class="text-danger"></span>
+                </div>
+            }
+            else
+            {
+                <input asp-for="UserId" type="hidden" />
+            }
 
             <div class="auto-form-group">
                 <label asp-for="Brand" class="auto-label"></label>

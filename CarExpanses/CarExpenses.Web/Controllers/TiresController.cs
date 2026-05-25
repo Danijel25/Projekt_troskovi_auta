@@ -1,10 +1,12 @@
 using CarExpenses.DAL.Repositories;
 using CarExpenses.Model.Models;
 using CarExpenses.Web.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CarExpenses.Web.Controllers;
 
+[Authorize]
 [Route("gume")]
 public class TiresController(ITireRepository repository) : Controller
 {

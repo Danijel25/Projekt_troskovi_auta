@@ -1,14 +1,18 @@
 using CarExpenses.DAL.Repositories;
 using CarExpenses.Model.Enums;
 using CarExpenses.Model.Models;
+using CarExpenses.Model.Security;
 using CarExpenses.Web.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace CarExpenses.Web.Controllers;
 
+[Authorize]
 [Route("auti")]
-public class CarsController(ICarRepository carRepository, IUserRepository userRepository) : Controller
+public class CarsController(ICarRepository carRepository, UserManager<User> userManager, ICurrentUserService currentUserService) : Controller
 {
     [Route("svi")]
     public IActionResult Index()
@@ -68,8 +72,25 @@ public class CarsController(ICarRepository carRepository, IUserRepository userRe
     [Route("novi")]
     public IActionResult Create(CarFormViewModel formModel)
     {
+        if (!User.IsInRole(AppRoles.Admin))
+        {
+            var currentUserId = currentUserService.UserId;
+            if (!currentUserId.HasValue)
+            {
+                return Forbid();
+            }
+
+            formModel.UserId = currentUserId.Value;
+        }
+
         if (!ModelState.IsValid)
         {
+            return View(BuildFormModel(formModel));
+        }
+
+        if (User.IsInRole(AppRoles.Admin) && !userManager.Users.Any(user => user.Id == formModel.UserId))
+        {
+            ModelState.AddModelError(nameof(formModel.UserId), "User not found.");
             return View(BuildFormModel(formModel));
         }
 
@@ -115,8 +136,25 @@ public class CarsController(ICarRepository carRepository, IUserRepository userRe
             return BadRequest();
         }
 
+        if (!User.IsInRole(AppRoles.Admin))
+        {
+            var currentUserId = currentUserService.UserId;
+            if (!currentUserId.HasValue)
+            {
+                return Forbid();
+            }
+
+            formModel.UserId = currentUserId.Value;
+        }
+
         if (!ModelState.IsValid)
         {
+            return View(BuildFormModel(formModel));
+        }
+
+        if (User.IsInRole(AppRoles.Admin) && !userManager.Users.Any(user => user.Id == formModel.UserId))
+        {
+            ModelState.AddModelError(nameof(formModel.UserId), "User not found.");
             return View(BuildFormModel(formModel));
         }
 
@@ -171,7 +209,7 @@ public class CarsController(ICarRepository carRepository, IUserRepository userRe
 
     private CarFormViewModel BuildFormModel(Car? car = null)
     {
-        return new CarFormViewModel
+        var formModel = new CarFormViewModel
         {
             Id = car?.Id ?? 0,
             UserId = car?.UserId ?? 0,
@@ -182,20 +220,49 @@ public class CarsController(ICarRepository carRepository, IUserRepository userRe
             CurrentMilage = car?.CurrentMilage ?? 0,
             PurchasePrice = car?.PurchasePrice ?? 0,
             PurchaseDate = car?.PurchaseDate ?? DateTime.Today,
-            FuelType = car?.FuelType ?? FuelType.Petrol,
-            UserOptions = userRepository.GetAll()
-                .OrderBy(user => user.Username)
-                .Select(user => new SelectListItem($"{user.Username} ({user.Email})", user.Id.ToString()))
-                .ToList()
+            FuelType = car?.FuelType ?? FuelType.Petrol
         };
+
+        if (User.IsInRole(AppRoles.Admin))
+        {
+            formModel.UserOptions = userManager.Users
+                .OrderBy(user => user.UserName)
+                .Select(user => new SelectListItem($"{user.UserName} ({user.Email})", user.Id.ToString()))
+                .ToList();
+        }
+        else
+        {
+            var currentUserId = currentUserService.UserId;
+            if (currentUserId.HasValue)
+            {
+                formModel.UserId = currentUserId.Value;
+            }
+
+            formModel.UserOptions = Array.Empty<SelectListItem>();
+        }
+
+        return formModel;
     }
 
     private CarFormViewModel BuildFormModel(CarFormViewModel formModel)
     {
-        formModel.UserOptions = userRepository.GetAll()
-            .OrderBy(user => user.Username)
-            .Select(user => new SelectListItem($"{user.Username} ({user.Email})", user.Id.ToString()))
-            .ToList();
+        if (User.IsInRole(AppRoles.Admin))
+        {
+            formModel.UserOptions = userManager.Users
+                .OrderBy(user => user.UserName)
+                .Select(user => new SelectListItem($"{user.UserName} ({user.Email})", user.Id.ToString()))
+                .ToList();
+        }
+        else
+        {
+            var currentUserId = currentUserService.UserId;
+            if (currentUserId.HasValue)
+            {
+                formModel.UserId = currentUserId.Value;
+            }
+
+            formModel.UserOptions = Array.Empty<SelectListItem>();
+        }
 
         return formModel;
     }

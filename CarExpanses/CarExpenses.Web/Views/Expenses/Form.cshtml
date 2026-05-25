@@ -1,6 +1,9 @@
 @model ExpenseFormViewModel
 @{
     var isCreate = Model.Id == 0;
+    var selectedCarLabel = Model.CarOptions.FirstOrDefault(option => option.Value == Model.CarId.ToString())?.Text ?? string.Empty;
+    var selectedCarValue = Model.CarId > 0 ? Model.CarId.ToString() : string.Empty;
+    var carLookupUrl = Url.Action("Search", "Lookups", new { source = "cars" }) ?? string.Empty;
     var selectedCategoryLabel = Model.CategoryOptions.FirstOrDefault(option => option.Value == Model.CategoryId.ToString())?.Text ?? string.Empty;
     var selectedCategoryValue = Model.CategoryId > 0 ? Model.CategoryId.ToString() : string.Empty;
     var categoryLookupUrl = Url.Action("Search", "Lookups", new { source = "categories" }) ?? string.Empty;
@@ -23,6 +26,22 @@
             <form asp-action="@(isCreate ? "Create" : "Edit")" asp-route-id="@Model.Id" method="post">
                 <div asp-validation-summary="ModelOnly" class="text-danger auto-validation-summary"></div>
                 <div class="auto-form-grid">
+                    <div class="auto-form-group auto-form-group-wide">
+                        <label class="auto-label" for="CarId_Display">@Html.DisplayNameFor(model => model.CarId)</label>
+                        @await Html.PartialAsync("_AutocompleteDropdown", new AutocompleteDropdownViewModel
+                        {
+                            InputId = "CarId_Display",
+                            HiddenInputId = "CarId",
+                            HiddenInputName = "CarId",
+                            LookupUrl = carLookupUrl,
+                            Placeholder = "Search car",
+                            SelectedLabel = selectedCarLabel,
+                            SelectedValue = selectedCarValue,
+                            MinChars = 1,
+                            Limit = 25
+                        })
+                        <span asp-validation-for="CarId" class="text-danger"></span>
+                    </div>
                     <div class="auto-form-group auto-form-group-wide">
                         <label class="auto-label" for="CategoryId_Display">@Html.DisplayNameFor(model => model.CategoryId)</label>
                         @await Html.PartialAsync("_AutocompleteDropdown", new AutocompleteDropdownViewModel

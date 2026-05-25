@@ -2,16 +2,6 @@ using CarExpenses.Model.Models;
 
 namespace CarExpenses.DAL.Repositories;
 
-public interface IUserRepository
-{
-    IReadOnlyList<User> GetAll();
-    User? GetById(int id);
-    User? GetByIdWithDetails(int id);
-    void Add(User user);
-    bool Update(User user);
-    bool Delete(int id);
-}
-
 public interface ICarRepository
 {
     IReadOnlyList<Car> GetAll();

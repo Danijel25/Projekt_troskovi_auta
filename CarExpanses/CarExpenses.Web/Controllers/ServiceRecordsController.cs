@@ -1,11 +1,13 @@
 using CarExpenses.DAL.Repositories;
 using CarExpenses.Model.Models;
 using CarExpenses.Web.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace CarExpenses.Web.Controllers;
 
+[Authorize]
 public class ServiceRecordsController(IServiceRecordRepository repository, ICarRepository carRepository) : Controller
 {
     public IActionResult Index() => View(repository.GetAll());
@@ -55,6 +57,12 @@ public class ServiceRecordsController(IServiceRecordRepository repository, ICarR
             return View("Form", BuildFormModel(formModel));
         }
 
+        if (carRepository.GetById(formModel.CarId) is null)
+        {
+            ModelState.AddModelError(nameof(formModel.CarId), "Car not found.");
+            return View("Form", BuildFormModel(formModel));
+        }
+
         repository.Add(new ServiceRecord
         {
             ServiceType = formModel.ServiceType,
@@ -85,6 +93,12 @@ public class ServiceRecordsController(IServiceRecordRepository repository, ICarR
 
         if (!ModelState.IsValid)
         {
+            return View("Form", BuildFormModel(formModel));
+        }
+
+        if (carRepository.GetById(formModel.CarId) is null)
+        {
+            ModelState.AddModelError(nameof(formModel.CarId), "Car not found.");
             return View("Form", BuildFormModel(formModel));
         }
 

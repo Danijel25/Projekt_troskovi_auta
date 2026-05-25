@@ -10,7 +10,7 @@ public sealed class ExpenseListItemDto
     public DateTime Date { get; set; }
     public int CategoryId { get; set; }
     public ExpenseCategoryDto? Category { get; set; }
-    public int? CarId { get; set; }
+    public int CarId { get; set; }
 }
 
 public sealed class ExpenseDetailDto
@@ -21,7 +21,7 @@ public sealed class ExpenseDetailDto
     public DateTime Date { get; set; }
     public int CategoryId { get; set; }
     public ExpenseCategoryDto? Category { get; set; }
-    public int? CarId { get; set; }
+    public int CarId { get; set; }
     public CarSummaryDto? Car { get; set; }
 }
 
@@ -39,7 +39,8 @@ public sealed class ExpenseCreateDto
     [Required]
     public int CategoryId { get; set; }
 
-    public int? CarId { get; set; }
+    [Required]
+    public int CarId { get; set; }
 }
 
 public sealed class ExpenseUpdateDto
@@ -56,5 +57,6 @@ public sealed class ExpenseUpdateDto
     [Required]
     public int CategoryId { get; set; }
 
-    public int? CarId { get; set; }
+    [Required]
+    public int CarId { get; set; }
 }

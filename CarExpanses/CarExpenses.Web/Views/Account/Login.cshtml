@@ -1,0 +1,46 @@
+@model LoginViewModel
+@{
+    ViewData["Title"] = "Login";
+}
+
+<main class="auto-page-container">
+    <section class="auto-form-container">
+        <header class="auto-form-header">
+            <div>
+                <p class="auto-kicker">Welcome back</p>
+                <h1 class="auto-form-title">Login</h1>
+            </div>
+        </header>
+
+        <div class="auto-form-shell">
+            <form asp-action="Login" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger auto-validation-summary"></div>
+                <input asp-for="ReturnUrl" type="hidden" />
+
+                <div class="auto-form-grid">
+                    <div class="auto-form-group auto-form-group-wide">
+                        <label asp-for="Email" class="auto-label"></label>
+                        <input asp-for="Email" class="auto-input" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                    <div class="auto-form-group auto-form-group-wide">
+                        <label asp-for="Password" class="auto-label"></label>
+                        <input asp-for="Password" class="auto-input" type="password" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+                    <div class="auto-form-group">
+                        <label class="auto-label">
+                            <input asp-for="RememberMe" class="form-check-input" />
+                            Remember me
+                        </label>
+                    </div>
+                </div>
+
+                <footer class="auto-form-actions">
+                    <button type="submit" class="auto-btn auto-btn-accent">Login</button>
+                    <a asp-controller="Account" asp-action="Register" class="auto-btn auto-btn-ghost">Create account</a>
+                </footer>
+            </form>
+        </div>
+    </section>
+</main>

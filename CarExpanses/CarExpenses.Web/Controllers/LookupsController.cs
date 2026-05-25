@@ -1,12 +1,17 @@
 using CarExpenses.DAL.Repositories;
+using CarExpenses.Model.Models;
+using CarExpenses.Model.Security;
 using CarExpenses.Web.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CarExpenses.Web.Controllers;
 
+[Authorize]
 [Route("lookup")]
 public class LookupsController(
-    IUserRepository userRepository,
+    UserManager<User> userManager,
     ICarRepository carRepository,
     ITireRepository tireRepository,
     IExpenseCategoryRepository expenseCategoryRepository) : Controller
@@ -17,6 +22,11 @@ public class LookupsController(
         var max = Math.Clamp(limit, 1, 50);
         var term = query?.Trim();
         var normalized = source.Trim().ToLowerInvariant();
+
+        if (normalized == "users" && !User.IsInRole(AppRoles.Admin))
+        {
+            return Forbid();
+        }
 
         var results = normalized switch
         {
@@ -32,22 +42,23 @@ public class LookupsController(
 
     private List<LookupItemViewModel> GetUsers(string? term, int limit)
     {
-        var users = userRepository.GetAll();
-        var filtered = string.IsNullOrWhiteSpace(term)
-            ? users
-            : users.Where(user =>
-                user.Username.Contains(term, StringComparison.OrdinalIgnoreCase)
-                || user.Email.Contains(term, StringComparison.OrdinalIgnoreCase)
-                || user.Id.ToString().Contains(term, StringComparison.OrdinalIgnoreCase));
+        var users = userManager.Users.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(term))
+        {
+            users = users.Where(user =>
+                (user.UserName != null && user.UserName.Contains(term))
+                || (user.Email != null && user.Email.Contains(term))
+                || user.Id.ToString().Contains(term));
+        }
 
-        return filtered
-            .OrderBy(user => user.Username)
+        return users
+            .OrderBy(user => user.UserName)
             .Take(limit)
             .Select(user => new LookupItemViewModel
             {
                 Value = user.Id.ToString(),
-                Label = user.Username,
-                Hint = user.Email
+                Label = user.UserName ?? string.Empty,
+                Hint = user.Email ?? string.Empty
             })
             .ToList();
     }

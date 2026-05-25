@@ -19,5 +19,9 @@ public class ExpenseFormViewModel
     [Required]
     public int CategoryId { get; set; }
 
+    [Required]
+    public int CarId { get; set; }
+
     public IEnumerable<SelectListItem> CategoryOptions { get; set; } = [];
+    public IEnumerable<SelectListItem> CarOptions { get; set; } = [];
 }

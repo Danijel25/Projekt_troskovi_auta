@@ -9,7 +9,10 @@
             <p class="auto-kicker">Ledger groups</p>
             <h1 class="auto-title">Expense Categories</h1>
         </div>
-        <a asp-action="Create" class="auto-btn auto-btn-accent auto-btn-large">Add New Category</a>
+        @if (User.IsInRole(AppRoles.Admin))
+        {
+            <a asp-action="Create" class="auto-btn auto-btn-accent auto-btn-large">Add New Category</a>
+        }
     </header>
 
     <div class="auto-search" data-ajax-search data-search-url="@Url.Action("Search")" data-search-target="#expense-categories-list">

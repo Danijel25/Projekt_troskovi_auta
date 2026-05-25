@@ -1,68 +1,62 @@
-﻿@model IReadOnlyList<Car>
-
-@{
-    ViewData["Title"] = "Fleet Dashboard";
-    var fleetExpenseTotal = Model.Sum(car => car.Expenses?.Sum(expense => expense.Amount) ?? 0m);
+﻿@{
+    ViewData["Title"] = "Track Your Fleet";
 }
 
-<div class="auto-page-container auto-home">
-    <header class="auto-page-header auto-stagger-item" style="animation-delay: 0.08s;">
-        <p class="auto-kicker">Financial Snapshot</p>
-        <h1 class="auto-hero-title">Fleet Expenses Board</h1>
-    </header>
-
-    <section class="auto-dashboard-summary auto-stagger-item" style="animation-delay: 0.16s;" aria-label="Fleet expense summary">
-        <div class="auto-summary-content">
-            <p class="auto-stats-label">Total Spent In Expenses</p>
-            <p class="auto-total-value">@fleetExpenseTotal.ToString("C")</p>
-            <p class="auto-fleet-size">Tracking <span class="auto-chip">@Model.Count cars</span> across your garage.</p>
+<div class="auto-page-container auto-landing-page">
+    <section class="auto-landing-hero auto-stagger-item" style="animation-delay: 0.08s;">
+        <div class="auto-landing-copy">
+            <p class="auto-kicker">Welcome to CarExpenses</p>
+            <h1 class="auto-hero-title">Tame your fleet's running costs</h1>
+            <p class="auto-landing-description">
+                Replace spreadsheets with a single command center for fuel, service, insurance, and every trip in between.
+                Keep the full history of every vehicle and see exactly where the budget goes.
+            </p>
+            <div class="auto-action-group">
+                <a asp-controller="Account" asp-action="Register" class="auto-btn auto-btn-primary auto-btn-large">
+                    Start Tracking
+                </a>
+                <a asp-controller="Account" asp-action="Login" class="auto-btn auto-btn-ghost auto-btn-large">
+                    I Already Have An Account
+                </a>
+            </div>
         </div>
-        <div class="auto-summary-decoration" aria-hidden="true"></div>
+        <div class="auto-landing-visual" aria-hidden="true"></div>
     </section>
 
-    @if (Model.Any())
-    {
-        <section class="auto-grid auto-home-grid" aria-label="Cars and expenses">
-            @{ var delay = 0.24; }
-            @foreach (var car in Model)
-            {
-                var carExpenseTotal = car.Expenses?.Sum(expense => expense.Amount) ?? 0m;
-                var carExpenseCount = car.Expenses?.Count ?? 0;
+    <section id="features" class="auto-landing-features auto-stagger-item" style="animation-delay: 0.16s;">
+        <header class="auto-landing-header">
+            <p class="auto-kicker">Built for busy garages</p>
+            <h2 class="auto-title">Every expense, one command center</h2>
+        </header>
+        <div class="auto-landing-grid">
+            <article class="auto-landing-card">
+                <h3>Fuel logs</h3>
+                <p>Record every fill-up, monitor efficiency, and track rising fuel costs before they bite.</p>
+            </article>
+            <article class="auto-landing-card">
+                <h3>Service history</h3>
+                <p>Log maintenance, inspections, and repairs so nothing slips past the next mileage mark.</p>
+            </article>
+            <article class="auto-landing-card">
+                <h3>Insurance and fees</h3>
+                <p>Store policy dates and recurring costs alongside each vehicle, ready for quick review.</p>
+            </article>
+        </div>
+    </section>
 
-                <article class="auto-card auto-stagger-item" style="animation-delay: @(delay.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))s;" aria-label="@car.Brand @car.Model expenses">
-                    <span class="auto-card-badge">@car.Year</span>
-                    <div class="auto-card-content">
-                        <h2 class="auto-card-title"><span>#@car.Id</span> @car.Brand @car.Model</h2>
-                        <dl class="auto-stats">
-                            <dt>Fuel</dt>
-                            <dd>@car.FuelType</dd>
-
-                            <dt>Mileage</dt>
-                            <dd>@car.CurrentMilage.ToString("N0") km</dd>
-
-                            <dt>Entries</dt>
-                            <dd>@carExpenseCount expenses</dd>
-
-                            <dt>Total</dt>
-                            <dd class="auto-cost-value">@carExpenseTotal.ToString("C")</dd>
-                        </dl>
-                    </div>
-                    <div class="auto-card-actions">
-                        <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id" class="auto-btn auto-btn-primary auto-home-btn">
-                            Open Car Details
-                        </a>
-                    </div>
-                </article>
-                delay += 0.08;
-            }
-        </section>
-    }
-    else
-    {
-        <section class="auto-empty-fleet auto-stagger-item" style="animation-delay: 0.24s;">
-            <h2>No Cars Yet</h2>
-            <p>There are no cars in the fleet right now. Add one from the cars page to start tracking expenses.</p>
-            <a asp-controller="Cars" asp-action="Index" class="auto-btn auto-btn-primary">Go To Cars</a>
-        </section>
-    }
+    <section class="auto-landing-cta auto-stagger-item" style="animation-delay: 0.24s;">
+        <div class="auto-landing-cta-copy">
+            <p class="auto-kicker">Ready to roll</p>
+            <h2 class="auto-title">Create a free account and start tracking today</h2>
+            <p class="auto-landing-cta-text">Set up your first car in minutes and keep every cost in one place.</p>
+        </div>
+        <div class="auto-action-group">
+            <a asp-controller="Account" asp-action="Register" class="auto-btn auto-btn-primary auto-btn-large">
+                Create Account
+            </a>
+            <a asp-controller="Account" asp-action="Login" class="auto-btn auto-btn-ghost auto-btn-large">
+                Sign In
+            </a>
+        </div>
+    </section>
 </div>

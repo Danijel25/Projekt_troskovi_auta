@@ -9,7 +9,7 @@
         <header class="auto-details-header">
             <div>
                 <p class="auto-kicker">Driver profile</p>
-                <h1 class="auto-hero-title">@Model.Username</h1>
+                <h1 class="auto-hero-title">@Model.UserName</h1>
             </div>
             <span class="auto-hero-tag">ID @Model.Id</span>
         </header>
@@ -18,9 +18,8 @@
                 <h2 class="auto-panel-heading">Profile Details</h2>
                 <ul class="auto-data-list">
                     <li><strong>Id:</strong> @Model.Id</li>
-                    <li><strong>Username:</strong> @Model.Username</li>
+                    <li><strong>Username:</strong> @Model.UserName</li>
                     <li><strong>Email:</strong> @Model.Email</li>
-                    <li><strong>Password:</strong> @Model.Password</li>
                     <li><strong>Total Cars:</strong> @(Model.Cars?.Count ?? 0)</li>
                 </ul>
             </section>

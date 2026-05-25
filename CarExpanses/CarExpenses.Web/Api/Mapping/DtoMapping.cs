@@ -8,14 +8,14 @@ internal static class DtoMapping
     public static UserSummaryDto ToSummaryDto(User user) => new()
     {
         Id = user.Id,
-        Username = user.Username,
+        Username = user.UserName ?? string.Empty,
         Email = user.Email
     };
 
     public static UserDetailDto ToDetailDto(User user) => new()
     {
         Id = user.Id,
-        Username = user.Username,
+        Username = user.UserName ?? string.Empty,
         Email = user.Email,
         Cars = user.Cars?.Select(ToSummaryDto).ToList() ?? []
     };

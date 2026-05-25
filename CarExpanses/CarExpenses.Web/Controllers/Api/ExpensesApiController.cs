@@ -2,11 +2,13 @@ using CarExpenses.DAL;
 using CarExpenses.Model.Models;
 using CarExpenses.Web.Api.Dtos;
 using CarExpenses.Web.Api.Mapping;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarExpenses.Web.Controllers.Api;
 
+[Authorize]
 [ApiController]
 [Route("api/expenses")]
 public sealed class ExpensesApiController : ControllerBase
@@ -40,7 +42,7 @@ public sealed class ExpensesApiController : ControllerBase
 
         if (carId.HasValue)
         {
-            query = query.Where(item => EF.Property<int?>(item, "CarId") == carId.Value);
+            query = query.Where(item => item.CarId == carId.Value);
         }
 
         if (fromDate.HasValue)
@@ -85,7 +87,7 @@ public sealed class ExpensesApiController : ControllerBase
                     Id = item.Category.Id,
                     Name = item.Category.Name
                 },
-                CarId = EF.Property<int?>(item, "CarId")
+                CarId = item.CarId
             })
             .ToListAsync();
 
@@ -108,7 +110,7 @@ public sealed class ExpensesApiController : ControllerBase
             return ValidationProblem(ModelState);
         }
 
-        if (dto.CarId.HasValue && !await dbContext.Cars.AnyAsync(car => car.Id == dto.CarId.Value))
+        if (!await dbContext.Cars.AnyAsync(car => car.Id == dto.CarId))
         {
             ModelState.AddModelError(nameof(dto.CarId), "Car not found.");
             return ValidationProblem(ModelState);
@@ -120,14 +122,11 @@ public sealed class ExpensesApiController : ControllerBase
             Amount = dto.Amount,
             Date = dto.Date,
             CategoryId = dto.CategoryId,
-            Category = null!
+            Category = null!,
+            CarId = dto.CarId
         };
 
         dbContext.Expenses.Add(expense);
-        if (dto.CarId.HasValue)
-        {
-            dbContext.Entry(expense).Property("CarId").CurrentValue = dto.CarId.Value;
-        }
 
         await dbContext.SaveChangesAsync();
 
@@ -155,7 +154,7 @@ public sealed class ExpensesApiController : ControllerBase
             return ValidationProblem(ModelState);
         }
 
-        if (dto.CarId.HasValue && !await dbContext.Cars.AnyAsync(car => car.Id == dto.CarId.Value))
+        if (!await dbContext.Cars.AnyAsync(car => car.Id == dto.CarId))
         {
             ModelState.AddModelError(nameof(dto.CarId), "Car not found.");
             return ValidationProblem(ModelState);
@@ -166,8 +165,7 @@ public sealed class ExpensesApiController : ControllerBase
         expense.Date = dto.Date;
         expense.CategoryId = dto.CategoryId;
         expense.Category = null!;
-
-        dbContext.Entry(expense).Property("CarId").CurrentValue = dto.CarId;
+        expense.CarId = dto.CarId;
 
         await dbContext.SaveChangesAsync();
         return NoContent();
@@ -189,47 +187,27 @@ public sealed class ExpensesApiController : ControllerBase
 
     private async Task<ExpenseDetailDto?> BuildExpenseDetailAsync(int id)
     {
-        var expenseData = await dbContext.Expenses
+        var expense = await dbContext.Expenses
             .Include(item => item.Category)
+            .Include(item => item.Car)
             .AsNoTracking()
-            .Where(item => item.Id == id)
-            .Select(item => new
-            {
-                Expense = item,
-                CarId = EF.Property<int?>(item, "CarId")
-            })
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(item => item.Id == id);
 
-        if (expenseData is null)
+        if (expense is null)
         {
             return null;
         }
 
-        CarSummaryDto? car = null;
-        if (expenseData.CarId.HasValue)
-        {
-            var carEntity = await dbContext.Cars
-                .AsNoTracking()
-                .FirstOrDefaultAsync(item => item.Id == expenseData.CarId.Value);
-
-            if (carEntity is not null)
-            {
-                car = DtoMapping.ToSummaryDto(carEntity);
-            }
-        }
-
         return new ExpenseDetailDto
         {
-            Id = expenseData.Expense.Id,
-            Description = expenseData.Expense.Description,
-            Amount = expenseData.Expense.Amount,
-            Date = expenseData.Expense.Date,
-            CategoryId = expenseData.Expense.CategoryId,
-            Category = expenseData.Expense.Category is null
-                ? null
-                : DtoMapping.ToDto(expenseData.Expense.Category),
-            CarId = expenseData.CarId,
-            Car = car
+            Id = expense.Id,
+            Description = expense.Description,
+            Amount = expense.Amount,
+            Date = expense.Date,
+            CategoryId = expense.CategoryId,
+            Category = expense.Category is null ? null : DtoMapping.ToDto(expense.Category),
+            CarId = expense.CarId,
+            Car = expense.Car is null ? null : DtoMapping.ToSummaryDto(expense.Car)
         };
     }
 }

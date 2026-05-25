@@ -1,12 +1,14 @@
 using CarExpenses.DAL.Repositories;
 using CarExpenses.Model.Models;
 using CarExpenses.Web.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace CarExpenses.Web.Controllers;
 
-public class ExpensesController(IExpenseRepository repository, IExpenseCategoryRepository categoryRepository) : Controller
+[Authorize]
+public class ExpensesController(IExpenseRepository repository, IExpenseCategoryRepository categoryRepository, ICarRepository carRepository) : Controller
 {
     public IActionResult Index() => View(repository.GetAll());
 
@@ -52,13 +54,20 @@ public class ExpensesController(IExpenseRepository repository, IExpenseCategoryR
             return View("Form", BuildFormModel(formModel));
         }
 
+        if (carRepository.GetById(formModel.CarId) is null)
+        {
+            ModelState.AddModelError(nameof(formModel.CarId), "Car not found.");
+            return View("Form", BuildFormModel(formModel));
+        }
+
         repository.Add(new Expense
         {
             Description = formModel.Description,
             Amount = formModel.Amount,
             Date = formModel.Date,
             CategoryId = formModel.CategoryId,
-            Category = null!
+            Category = null!,
+            CarId = formModel.CarId
         });
         return RedirectToAction(nameof(Index));
     }
@@ -84,6 +93,12 @@ public class ExpensesController(IExpenseRepository repository, IExpenseCategoryR
             return View("Form", BuildFormModel(formModel));
         }
 
+        if (carRepository.GetById(formModel.CarId) is null)
+        {
+            ModelState.AddModelError(nameof(formModel.CarId), "Car not found.");
+            return View("Form", BuildFormModel(formModel));
+        }
+
         var expense = new Expense
         {
             Id = formModel.Id,
@@ -91,7 +106,8 @@ public class ExpensesController(IExpenseRepository repository, IExpenseCategoryR
             Amount = formModel.Amount,
             Date = formModel.Date,
             CategoryId = formModel.CategoryId,
-            Category = null!
+            Category = null!,
+            CarId = formModel.CarId
         };
 
         if (!repository.Update(expense))
@@ -128,9 +144,15 @@ public class ExpensesController(IExpenseRepository repository, IExpenseCategoryR
             Amount = expense?.Amount ?? 0,
             Date = expense?.Date ?? DateTime.Today,
             CategoryId = expense?.CategoryId ?? 0,
+            CarId = expense?.CarId ?? 0,
             CategoryOptions = categoryRepository.GetAll()
                 .OrderBy(category => category.Name)
                 .Select(category => new SelectListItem(category.Name, category.Id.ToString()))
+                .ToList(),
+            CarOptions = carRepository.GetAll()
+                .OrderBy(car => car.Brand)
+                .ThenBy(car => car.Model)
+                .Select(car => new SelectListItem($"{car.Brand} {car.Model} ({car.Year})", car.Id.ToString()))
                 .ToList()
         };
     }
@@ -140,6 +162,11 @@ public class ExpensesController(IExpenseRepository repository, IExpenseCategoryR
         formModel.CategoryOptions = categoryRepository.GetAll()
             .OrderBy(category => category.Name)
             .Select(category => new SelectListItem(category.Name, category.Id.ToString()))
+            .ToList();
+        formModel.CarOptions = carRepository.GetAll()
+            .OrderBy(car => car.Brand)
+            .ThenBy(car => car.Model)
+            .Select(car => new SelectListItem($"{car.Brand} {car.Model} ({car.Year})", car.Id.ToString()))
             .ToList();
         return formModel;
     }

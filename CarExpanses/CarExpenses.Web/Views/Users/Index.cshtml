@@ -9,7 +9,7 @@
             <p class="auto-kicker">Driver profiles</p>
             <h1 class="auto-title">Users</h1>
         </div>
-        <a asp-action="Create" class="auto-btn auto-btn-accent auto-btn-large">Add New User</a>
+        <a asp-controller="Account" asp-action="Register" class="auto-btn auto-btn-accent auto-btn-large">Register New User</a>
     </header>
 
     <div class="auto-search" data-ajax-search data-search-url="@Url.Action("Search")" data-search-target="#users-list">

@@ -1,10 +1,13 @@
 using CarExpenses.DAL.Repositories;
 using CarExpenses.Model.Models;
+using CarExpenses.Model.Security;
 using CarExpenses.Web.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CarExpenses.Web.Controllers;
 
+[Authorize]
 public class ExpenseCategoriesController(IExpenseCategoryRepository repository) : Controller
 {
 	public IActionResult Index() => View(repository.GetAll());
@@ -34,9 +37,11 @@ public class ExpenseCategoriesController(IExpenseCategoryRepository repository) 
 		return category is null ? NotFound() : View(category);
 	}
 
+	[Authorize(Roles = AppRoles.Admin)]
 	[HttpGet]
 	public IActionResult Create() => View("Form", new ExpenseCategoryFormViewModel());
 
+	[Authorize(Roles = AppRoles.Admin)]
 	[HttpPost]
 	[ValidateAntiForgeryToken]
 	public IActionResult Create(ExpenseCategoryFormViewModel formModel)
@@ -50,6 +55,7 @@ public class ExpenseCategoriesController(IExpenseCategoryRepository repository) 
 		return RedirectToAction(nameof(Index));
 	}
 
+	[Authorize(Roles = AppRoles.Admin)]
 	[HttpGet]
 	public IActionResult Edit(int id)
 	{
@@ -61,6 +67,7 @@ public class ExpenseCategoriesController(IExpenseCategoryRepository repository) 
 		});
 	}
 
+	[Authorize(Roles = AppRoles.Admin)]
 	[HttpPost]
 	[ValidateAntiForgeryToken]
 	public IActionResult Edit(int id, ExpenseCategoryFormViewModel formModel)
@@ -88,6 +95,7 @@ public class ExpenseCategoriesController(IExpenseCategoryRepository repository) 
 		return RedirectToAction(nameof(Index));
 	}
 
+	[Authorize(Roles = AppRoles.Admin)]
 	[HttpGet]
 	public IActionResult Delete(int id)
 	{
@@ -95,6 +103,7 @@ public class ExpenseCategoriesController(IExpenseCategoryRepository repository) 
 		return category is null ? NotFound() : View(category);
 	}
 
+	[Authorize(Roles = AppRoles.Admin)]
 	[HttpPost, ActionName("Delete")]
 	[ValidateAntiForgeryToken]
 	public IActionResult DeleteConfirmed(int id)

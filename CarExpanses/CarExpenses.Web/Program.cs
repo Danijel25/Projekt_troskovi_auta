@@ -2,6 +2,10 @@ using CarExpenses.DAL;
 using CarExpenses.DAL.Repositories;
 using Microsoft.EntityFrameworkCore;
 
+using CarExpenses.Model.Models;
+using CarExpenses.Model.Security;
+using CarExpenses.Web.Services;
+using Microsoft.AspNetCore.Identity;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -11,7 +15,24 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<CarExpesesDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddControllersWithViews();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
+    {
+        options.Password.RequireDigit = true;
+        options.Password.RequireLowercase = true;
+        options.Password.RequireUppercase = false;
+        options.Password.RequireNonAlphanumeric = false;
+        options.Password.RequiredLength = 6;
+        options.User.RequireUniqueEmail = true;
+    })
+    .AddEntityFrameworkStores<CarExpesesDbContext>()
+    .AddDefaultTokenProviders();
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/account/login";
+    options.AccessDeniedPath = "/account/access-denied";
+});
 builder.Services.AddScoped<ICarRepository, CarRepository>();
 builder.Services.AddScoped<ITireRepository, TireRepository>();
 builder.Services.AddScoped<ICarTireRepository, CarTireRepository>();
@@ -33,6 +54,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();

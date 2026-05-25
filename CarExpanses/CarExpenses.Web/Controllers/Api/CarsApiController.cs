@@ -1,22 +1,27 @@
 using CarExpenses.DAL;
 using CarExpenses.Model.Enums;
 using CarExpenses.Model.Models;
+using CarExpenses.Model.Security;
 using CarExpenses.Web.Api.Dtos;
 using CarExpenses.Web.Api.Mapping;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarExpenses.Web.Controllers.Api;
 
+[Authorize]
 [ApiController]
 [Route("api/cars")]
 public sealed class CarsApiController : ControllerBase
 {
     private readonly CarExpesesDbContext dbContext;
+    private readonly ICurrentUserService currentUserService;
 
-    public CarsApiController(CarExpesesDbContext dbContext)
+    public CarsApiController(CarExpesesDbContext dbContext, ICurrentUserService currentUserService)
     {
         this.dbContext = dbContext;
+        this.currentUserService = currentUserService;
     }
 
     [HttpGet]
@@ -78,7 +83,18 @@ public sealed class CarsApiController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<CarDetailDto>> Create(CarCreateDto dto)
     {
-        if (!await dbContext.Users.AnyAsync(user => user.Id == dto.UserId))
+        var userId = dto.UserId;
+        if (!User.IsInRole(AppRoles.Admin))
+        {
+            if (!currentUserService.UserId.HasValue)
+            {
+                return Forbid();
+            }
+
+            userId = currentUserService.UserId.Value;
+        }
+
+        if (!await dbContext.Users.AnyAsync(user => user.Id == userId))
         {
             ModelState.AddModelError(nameof(dto.UserId), "User not found.");
             return ValidationProblem(ModelState);
@@ -86,7 +102,7 @@ public sealed class CarsApiController : ControllerBase
 
         var car = new Car
         {
-            UserId = dto.UserId,
+            UserId = userId,
             Brand = dto.Brand,
             Model = dto.Model,
             Year = dto.Year,
@@ -118,13 +134,16 @@ public sealed class CarsApiController : ControllerBase
             return NotFound();
         }
 
-        if (!await dbContext.Users.AnyAsync(user => user.Id == dto.UserId))
+        if (User.IsInRole(AppRoles.Admin))
         {
-            ModelState.AddModelError(nameof(dto.UserId), "User not found.");
-            return ValidationProblem(ModelState);
-        }
+            if (!await dbContext.Users.AnyAsync(user => user.Id == dto.UserId))
+            {
+                ModelState.AddModelError(nameof(dto.UserId), "User not found.");
+                return ValidationProblem(ModelState);
+            }
 
-        car.UserId = dto.UserId;
+            car.UserId = dto.UserId;
+        }
         car.Brand = dto.Brand;
         car.Model = dto.Model;
         car.Year = dto.Year;

@@ -1,32 +1,37 @@
-using CarExpenses.DAL;
 using CarExpenses.Model.Models;
+using CarExpenses.Model.Security;
 using CarExpenses.Web.Api.Dtos;
 using CarExpenses.Web.Api.Mapping;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarExpenses.Web.Controllers.Api;
 
+[Authorize(Roles = AppRoles.Admin)]
 [ApiController]
 [Route("api/users")]
 public sealed class UsersApiController : ControllerBase
 {
-    private readonly CarExpesesDbContext dbContext;
+    private readonly UserManager<User> userManager;
 
-    public UsersApiController(CarExpesesDbContext dbContext)
+    public UsersApiController(UserManager<User> userManager)
     {
-        this.dbContext = dbContext;
+        this.userManager = userManager;
     }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<UserSummaryDto>>> GetAll([FromQuery] string? search)
     {
-        var query = dbContext.Users.AsNoTracking().AsQueryable();
+        var query = userManager.Users.AsNoTracking().AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(search))
         {
             var term = search.Trim();
-            query = query.Where(user => user.Username.Contains(term) || user.Email.Contains(term));
+            query = query.Where(user =>
+                (user.UserName != null && user.UserName.Contains(term))
+                || (user.Email != null && user.Email.Contains(term)));
         }
 
         var users = await query.OrderBy(user => user.Id).ToListAsync();
@@ -37,7 +42,7 @@ public sealed class UsersApiController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<ActionResult<UserDetailDto>> GetById(int id)
     {
-        var user = await dbContext.Users
+        var user = await userManager.Users
             .Include(item => item.Cars)
             .AsNoTracking()
             .FirstOrDefaultAsync(item => item.Id == id);
@@ -55,15 +60,33 @@ public sealed class UsersApiController : ControllerBase
     {
         var user = new User
         {
-            Username = dto.Username,
-            Email = dto.Email,
-            Password = dto.Password
+            UserName = dto.Username,
+            Email = dto.Email
         };
 
-        dbContext.Users.Add(user);
-        await dbContext.SaveChangesAsync();
+        var result = await userManager.CreateAsync(user, dto.Password);
+        if (!result.Succeeded)
+        {
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
 
-        var created = await dbContext.Users
+            return ValidationProblem(ModelState);
+        }
+
+        var roleResult = await userManager.AddToRoleAsync(user, AppRoles.BasicUser);
+        if (!roleResult.Succeeded)
+        {
+            foreach (var error in roleResult.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
+            return ValidationProblem(ModelState);
+        }
+
+        var created = await userManager.Users
             .Include(item => item.Cars)
             .AsNoTracking()
             .FirstAsync(item => item.Id == user.Id);
@@ -74,45 +97,64 @@ public sealed class UsersApiController : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, UserUpdateDto dto)
     {
-        var user = await dbContext.Users.FirstOrDefaultAsync(item => item.Id == id);
+        var user = await userManager.FindByIdAsync(id.ToString());
         if (user is null)
         {
             return NotFound();
         }
 
-        user.Username = dto.Username;
+        user.UserName = dto.Username;
         user.Email = dto.Email;
-        user.Password = dto.Password;
 
-        await dbContext.SaveChangesAsync();
+        var updateResult = await userManager.UpdateAsync(user);
+        if (!updateResult.Succeeded)
+        {
+            foreach (var error in updateResult.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
+            return ValidationProblem(ModelState);
+        }
+
+        if (!string.IsNullOrWhiteSpace(dto.Password))
+        {
+            var token = await userManager.GeneratePasswordResetTokenAsync(user);
+            var passwordResult = await userManager.ResetPasswordAsync(user, token, dto.Password);
+            if (!passwordResult.Succeeded)
+            {
+                foreach (var error in passwordResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+
+                return ValidationProblem(ModelState);
+            }
+        }
+
         return NoContent();
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var user = await dbContext.Users
-            .Include(item => item.Cars)!
-                .ThenInclude(car => car.FuelExpenses)
-            .Include(item => item.Cars)!
-                .ThenInclude(car => car.ServiceRecords)
-            .Include(item => item.Cars)!
-                .ThenInclude(car => car.Insurances)
-            .Include(item => item.Cars)!
-                .ThenInclude(car => car.CarTires)!
-                    .ThenInclude(carTire => carTire.Tire)
-            .Include(item => item.Cars)!
-                .ThenInclude(car => car.Expenses)!
-                    .ThenInclude(expense => expense.Category)
-            .FirstOrDefaultAsync(item => item.Id == id);
-
+        var user = await userManager.FindByIdAsync(id.ToString());
         if (user is null)
         {
             return NotFound();
         }
 
-        dbContext.Users.Remove(user);
-        await dbContext.SaveChangesAsync();
+        var result = await userManager.DeleteAsync(user);
+        if (!result.Succeeded)
+        {
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
+            return ValidationProblem(ModelState);
+        }
+
         return NoContent();
     }
 }

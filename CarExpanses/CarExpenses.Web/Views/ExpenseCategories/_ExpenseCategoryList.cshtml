@@ -23,8 +23,11 @@
                 <footer class="auto-card-actions">
                     <div class="auto-action-group">
                         <a asp-action="Details" asp-route-id="@item.Id" class="auto-btn auto-btn-primary" aria-label="View expense category @item.Name">Details</a>
-                        <a asp-action="Edit" asp-route-id="@item.Id" class="auto-btn auto-btn-ghost" aria-label="Edit @item.Name">Update</a>
-                        <a asp-action="Delete" asp-route-id="@item.Id" class="auto-btn auto-btn-danger" aria-label="Delete @item.Name">Delete</a>
+                        @if (User.IsInRole(AppRoles.Admin))
+                        {
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="auto-btn auto-btn-ghost" aria-label="Edit @item.Name">Update</a>
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="auto-btn auto-btn-danger" aria-label="Delete @item.Name">Delete</a>
+                        }
                     </div>
                 </footer>
             </article>
