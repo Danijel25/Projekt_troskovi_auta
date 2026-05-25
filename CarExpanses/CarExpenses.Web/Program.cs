@@ -28,6 +28,25 @@ builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
     })
     .AddEntityFrameworkStores<CarExpesesDbContext>()
     .AddDefaultTokenProviders();
+
+var googleClientId = builder.Configuration["GoogleClientId"];
+var googleClientSecret = builder.Configuration["GoogleClientSecret"];
+
+if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret))
+{
+    builder.Services.AddAuthentication()
+        .AddGoogleOpenIdConnect(options =>
+        {
+            options.SignInScheme = IdentityConstants.ExternalScheme;
+            options.ClientId = googleClientId;
+            options.ClientSecret = googleClientSecret;
+            options.CallbackPath = "/signin-google";
+            // options.ProtocolValidator = new()
+            // {
+            //     RequireNonce = false
+            // };            
+        });
+}
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/account/login";

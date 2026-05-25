@@ -669,6 +669,26 @@ textarea.auto-input {
   margin-top: 0;
 }
 
+.auto-form-divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.5rem 0 1rem;
+  color: #6b6254;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08rem;
+  font-size: 0.75rem;
+}
+
+.auto-form-divider::before,
+.auto-form-divider::after {
+  content: "";
+  flex: 1;
+  height: 2px;
+  background: rgba(28, 26, 23, 0.2);
+}
+
 .auto-stats-compact {
   grid-template-columns: auto 1fr;
 }

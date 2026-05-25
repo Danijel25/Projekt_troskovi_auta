@@ -1,6 +1,8 @@
 @model LoginViewModel
 @{
     ViewData["Title"] = "Login";
+    var externalProviders = ViewData["ExternalLoginProviders"] as IEnumerable<AuthenticationScheme>;
+    var hasExternalProviders = externalProviders?.Any() ?? false;
 }
 
 <main class="auto-page-container">
@@ -41,6 +43,26 @@
                     <a asp-controller="Account" asp-action="Register" class="auto-btn auto-btn-ghost">Create account</a>
                 </footer>
             </form>
+
+            @if (hasExternalProviders)
+            {
+                <div class="auto-form-divider">
+                    <span>Or continue with</span>
+                </div>
+
+                @foreach (var provider in externalProviders ?? Enumerable.Empty<AuthenticationScheme>())
+                {
+                    var displayName = string.IsNullOrWhiteSpace(provider.DisplayName)
+                        ? provider.Name
+                        : provider.DisplayName;
+
+                    <form asp-action="ExternalLogin" method="post" class="auto-form-actions auto-form-actions-inline">
+                        <input type="hidden" name="provider" value="@provider.Name" />
+                        <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+                        <button type="submit" class="auto-btn auto-btn-secondary">Continue with @displayName</button>
+                    </form>
+                }
+            }
         </div>
     </section>
 </main>
