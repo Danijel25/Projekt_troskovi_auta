@@ -8,6 +8,7 @@ using CarExpenses.Web.Services;
 using Microsoft.AspNetCore.Identity;
 using Serilog;
 using Serilog.Events;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog((context, loggerConfiguration) =>
@@ -16,7 +17,7 @@ builder.Host.UseSerilog((context, loggerConfiguration) =>
         .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
         .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
         .Enrich.FromLogContext()
-        //.WriteTo.ColoredConsole()
+        .WriteTo.Console()
         .WriteTo.File("logs/serilog-.log", rollingInterval: RollingInterval.Day));
 
 // Add services to the container.
