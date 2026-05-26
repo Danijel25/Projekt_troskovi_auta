@@ -1,0 +1,23 @@
+<div class="ce-global-search" data-global-search data-global-search-url="@Url.Action("Search", "GlobalSearch")" hidden>
+    <div class="ce-global-search-backdrop" data-global-search-close></div>
+    <div class="ce-global-search-panel" role="dialog" aria-modal="true" aria-labelledby="ce-global-search-title">
+        <div class="ce-global-search-header">
+            <div>
+                <p class="ce-global-search-kicker">Global search</p>
+                <h2 id="ce-global-search-title" class="ce-global-search-title">Find pages and records</h2>
+            </div>
+            <button type="button" class="auto-btn auto-btn-ghost ce-global-search-close" data-global-search-close aria-label="Close search">
+                Close
+            </button>
+        </div>
+        <div class="ce-global-search-input-row">
+            <input id="ce-global-search-input" type="search" class="auto-input ce-global-search-input" placeholder="Search pages, cars, expenses..."
+                   autocomplete="off" spellcheck="false" data-global-search-input aria-describedby="ce-global-search-status" aria-controls="ce-global-search-results" aria-expanded="false" />
+            <span class="ce-global-search-shortcut" aria-hidden="true">Ctrl+K</span>
+        </div>
+        <p id="ce-global-search-status" class="ce-global-search-status" data-global-search-status aria-live="polite"></p>
+        <div id="ce-global-search-results" class="ce-global-search-results" data-global-search-results>
+            <p class="ce-global-search-empty" data-global-search-empty>Start typing to search pages and records.</p>
+        </div>
+    </div>
+</div>

@@ -87,7 +87,14 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
                     </ul>
-                    <div class="d-flex align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        @if (User.Identity?.IsAuthenticated ?? false)
+                        {
+                            <button type="button" class="auto-btn auto-btn-ghost auto-btn-nav ce-search-trigger" data-global-search-trigger aria-label="Open search (Ctrl+K)">
+                                Search
+                                <span class="ce-search-shortcut" aria-hidden="true">Ctrl+K</span>
+                            </button>
+                        }
                         <partial name="_LoginPartial" />
                     </div>
                 </div>
@@ -105,6 +112,10 @@
             &copy; 2026 - CarExpenses - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
+    @if (User.Identity?.IsAuthenticated ?? false)
+    {
+        <partial name="_GlobalSearch" />
+    }
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <partial name="_ValidationScriptsPartial" />

@@ -486,9 +486,293 @@
 		}
 	};
 
+	const initGlobalSearch = (container) => {
+		const input = container.querySelector("[data-global-search-input]");
+		const results = container.querySelector("[data-global-search-results]");
+		const status = container.querySelector("[data-global-search-status]");
+		const empty = container.querySelector("[data-global-search-empty]");
+		const searchUrl = container.getAttribute("data-global-search-url");
+		const triggers = document.querySelectorAll("[data-global-search-trigger]");
+		const closeButtons = container.querySelectorAll("[data-global-search-close]");
+
+		if (!input || !results || !searchUrl) {
+			return;
+		}
+
+		let timeoutId = null;
+		let controller = null;
+		let activeIndex = -1;
+		let options = [];
+		let lastQuery = null;
+
+		const isOpen = () => !container.hidden;
+
+		const setStatus = (message) => {
+			if (status) {
+				status.textContent = message || "";
+			}
+		};
+
+		const clearResults = () => {
+			results.replaceChildren();
+			options = [];
+			activeIndex = -1;
+			if (empty) {
+				empty.hidden = false;
+				results.appendChild(empty);
+			}
+			input.setAttribute("aria-expanded", "false");
+			input.removeAttribute("aria-activedescendant");
+		};
+
+		const setActive = (nextIndex) => {
+			if (!options.length) {
+				activeIndex = -1;
+				return;
+			}
+
+			const clamped = Math.max(0, Math.min(nextIndex, options.length - 1));
+			options.forEach((option, index) => {
+				const isActive = index === clamped;
+				option.classList.toggle("is-active", isActive);
+				option.setAttribute("aria-selected", isActive ? "true" : "false");
+				if (isActive) {
+					option.scrollIntoView({ block: "nearest" });
+					input.setAttribute("aria-activedescendant", option.id);
+				}
+			});
+
+			activeIndex = clamped;
+		};
+
+		const activate = (index) => {
+			const option = options[index];
+			if (!option) {
+				return;
+			}
+
+			const link = option.querySelector("a");
+			if (link) {
+				window.location.assign(link.href);
+			}
+		};
+
+		const renderGroups = (groups) => {
+			results.replaceChildren();
+			options = [];
+			activeIndex = -1;
+
+			const list = document.createElement("ul");
+			list.className = "ce-global-search-list";
+			list.setAttribute("role", "listbox");
+			list.id = "ce-global-search-list";
+
+			if (empty) {
+				empty.textContent = input.value.trim().length
+					? "No matches found."
+					: "Start typing to search pages and records.";
+			}
+
+			if (Array.isArray(groups)) {
+				groups.forEach((group) => {
+					if (!group || !Array.isArray(group.items) || group.items.length === 0) {
+						return;
+					}
+
+					const heading = document.createElement("li");
+					heading.className = "ce-global-search-group";
+					heading.setAttribute("role", "presentation");
+					heading.textContent = group.title || "Results";
+					list.appendChild(heading);
+
+					group.items.forEach((item) => {
+						const option = document.createElement("li");
+						option.className = "ce-global-search-option";
+						option.setAttribute("role", "option");
+						option.setAttribute("aria-selected", "false");
+						option.dataset.index = options.length.toString();
+						option.id = `ce-global-search-option-${options.length}`;
+
+						const link = document.createElement("a");
+						link.className = "ce-global-search-link";
+						link.href = item.url;
+						link.tabIndex = -1;
+
+						const label = document.createElement("span");
+						label.className = "ce-global-search-label";
+						label.textContent = item.label || "";
+						link.appendChild(label);
+
+						if (item.hint) {
+							const hint = document.createElement("span");
+							hint.className = "ce-global-search-hint";
+							hint.textContent = item.hint;
+							link.appendChild(hint);
+						}
+
+						option.appendChild(link);
+						list.appendChild(option);
+						options.push(option);
+					});
+				});
+			}
+
+			if (options.length > 0) {
+				if (empty) {
+					empty.hidden = true;
+				}
+				results.appendChild(list);
+				input.setAttribute("aria-expanded", "true");
+				return;
+			}
+
+			if (empty) {
+				empty.hidden = false;
+				results.appendChild(empty);
+			}
+			input.setAttribute("aria-expanded", "false");
+		};
+
+		const fetchResults = (query) => {
+			if (controller) {
+				controller.abort();
+			}
+			controller = new AbortController();
+
+			const url = new URL(searchUrl, window.location.origin);
+			if (query) {
+				url.searchParams.set("query", query);
+			}
+
+			setStatus(query ? "Searching..." : "");
+			fetch(url.toString(), {
+				headers: {
+					"X-Requested-With": "XMLHttpRequest"
+				},
+				signal: controller.signal
+			})
+				.then((response) => {
+					if (!response.ok) {
+						throw new Error(`Global search failed: ${response.status}`);
+					}
+					return response.json();
+				})
+				.then((data) => {
+					renderGroups(data?.groups || []);
+					setStatus("");
+				})
+				.catch((error) => {
+					if (error.name === "AbortError") {
+						return;
+					}
+					setStatus("Search failed. Please try again.");
+					renderGroups([]);
+				});
+		};
+
+		const scheduleFetch = (force) => {
+			const query = input.value.trim();
+			if (!force && query === lastQuery) {
+				return;
+			}
+			lastQuery = query;
+			if (timeoutId) {
+				window.clearTimeout(timeoutId);
+			}
+
+			if (force) {
+				fetchResults(query);
+				return;
+			}
+			timeoutId = window.setTimeout(() => fetchResults(query), debounceMs);
+		};
+
+		const open = () => {
+			if (container.hidden) {
+				container.hidden = false;
+				container.classList.add("is-open");
+				document.body.classList.add("ce-global-search-open");
+			}
+			input.focus();
+			input.select();
+			scheduleFetch(true);
+		};
+
+		const close = () => {
+			container.hidden = true;
+			container.classList.remove("is-open");
+			document.body.classList.remove("ce-global-search-open");
+			input.value = "";
+			setStatus("");
+			clearResults();
+		};
+
+		triggers.forEach((trigger) => {
+			trigger.addEventListener("click", (event) => {
+				event.preventDefault();
+				open();
+			});
+		});
+
+		closeButtons.forEach((button) => {
+			button.addEventListener("click", () => {
+				if (isOpen()) {
+					close();
+				}
+			});
+		});
+
+		container.addEventListener("click", (event) => {
+			const option = event.target.closest("[data-index]");
+			if (option && option.dataset.index) {
+				event.preventDefault();
+				activate(Number(option.dataset.index));
+			}
+		});
+
+		input.addEventListener("input", () => scheduleFetch(false));
+		input.addEventListener("keydown", (event) => {
+			if (event.key === "ArrowDown") {
+				event.preventDefault();
+				setActive(activeIndex + 1);
+			} else if (event.key === "ArrowUp") {
+				event.preventDefault();
+				setActive(activeIndex - 1);
+			} else if (event.key === "Enter") {
+				if (activeIndex >= 0) {
+					event.preventDefault();
+					activate(activeIndex);
+				}
+			} else if (event.key === "Escape") {
+				event.preventDefault();
+				close();
+			}
+		});
+
+		document.addEventListener("keydown", (event) => {
+			if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === "k") {
+				event.preventDefault();
+				if (!isOpen()) {
+					open();
+				} else {
+					input.focus();
+				}
+				return;
+			}
+
+			if (event.key === "Escape" && isOpen()) {
+				event.preventDefault();
+				close();
+			}
+		});
+
+		clearResults();
+	};
+
 	document.addEventListener("DOMContentLoaded", () => {
 		document.querySelectorAll("[data-ajax-search]").forEach(initAjaxSearch);
 		document.querySelectorAll("[data-autocomplete-dropdown]").forEach(initAutocompleteDropdown);
 		document.querySelectorAll("[data-car-files]").forEach(initCarFiles);
+		document.querySelectorAll("[data-global-search]").forEach(initGlobalSearch);
 	});
 })();
