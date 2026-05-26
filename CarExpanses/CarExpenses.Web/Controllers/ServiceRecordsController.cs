@@ -15,28 +15,8 @@ public class ServiceRecordsController(IServiceRecordRepository repository, ICarR
     [HttpGet]
     public IActionResult Search(string? query)
     {
-        var serviceRecords = repository.GetAll();
-
-        if (string.IsNullOrWhiteSpace(query))
-        {
-            return PartialView("_ServiceRecordList", serviceRecords);
-        }
-
-        var term = query.Trim();
-        var filtered = serviceRecords
-            .Where(record =>
-                record.ServiceType.Contains(term, StringComparison.OrdinalIgnoreCase)
-                || record.Description.Contains(term, StringComparison.OrdinalIgnoreCase)
-                || record.Cost.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
-                || record.ServiceDate.ToString("yyyy-MM-dd").Contains(term, StringComparison.OrdinalIgnoreCase)
-                || record.Mileage.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
-                || record.CarId.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
-                || record.Id.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
-                || (record.Car?.Brand?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
-                || (record.Car?.Model?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false))
-            .ToList();
-
-        return PartialView("_ServiceRecordList", filtered);
+        var serviceRecords = repository.Query(new ServiceRecordFilter { Search = query }).ToList();
+        return PartialView("_ServiceRecordList", serviceRecords);
     }
 
     public IActionResult Details(int id)

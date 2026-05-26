@@ -1,4 +1,5 @@
 using CarExpenses.DAL;
+using CarExpenses.DAL.Repositories;
 using CarExpenses.Model.Models;
 using CarExpenses.Web.Api.Dtos;
 using CarExpenses.Web.Api.Mapping;
@@ -14,10 +15,12 @@ namespace CarExpenses.Web.Controllers.Api;
 public sealed class InsurancesApiController : ControllerBase
 {
     private readonly CarExpesesDbContext dbContext;
+    private readonly IInsuranceRepository insuranceRepository;
 
-    public InsurancesApiController(CarExpesesDbContext dbContext)
+    public InsurancesApiController(CarExpesesDbContext dbContext, IInsuranceRepository insuranceRepository)
     {
         this.dbContext = dbContext;
+        this.insuranceRepository = insuranceRepository;
     }
 
     [HttpGet]
@@ -27,33 +30,15 @@ public sealed class InsurancesApiController : ControllerBase
         [FromQuery] DateTime? fromDate,
         [FromQuery] DateTime? toDate)
     {
-        var query = dbContext.Insurances
-            .Include(item => item.Car)
-            .AsNoTracking()
-            .AsQueryable();
-
-        if (carId.HasValue)
-        {
-            query = query.Where(item => item.CarId == carId.Value);
-        }
-
-        if (fromDate.HasValue)
-        {
-            query = query.Where(item => item.StartDate >= fromDate.Value);
-        }
-
-        if (toDate.HasValue)
-        {
-            query = query.Where(item => item.EndDate <= toDate.Value);
-        }
-
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            var term = search.Trim();
-            query = query.Where(item => item.Company.Contains(term) || item.InsuranceType.Contains(term));
-        }
-
-        var insurances = await query.OrderByDescending(item => item.StartDate).ToListAsync();
+        var insurances = await insuranceRepository
+            .Query(new InsuranceFilter
+            {
+                Search = search,
+                CarId = carId,
+                FromDate = fromDate,
+                ToDate = toDate
+            })
+            .ToListAsync();
         var result = insurances.Select(DtoMapping.ToDto).ToList();
         return Ok(result);
     }

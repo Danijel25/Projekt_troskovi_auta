@@ -1,4 +1,5 @@
 using CarExpenses.DAL;
+using CarExpenses.DAL.Repositories;
 using CarExpenses.Model.Enums;
 using CarExpenses.Model.Models;
 using CarExpenses.Model.Security;
@@ -17,11 +18,16 @@ public sealed class CarsApiController : ControllerBase
 {
     private readonly CarExpesesDbContext dbContext;
     private readonly ICurrentUserService currentUserService;
+    private readonly ICarRepository carRepository;
 
-    public CarsApiController(CarExpesesDbContext dbContext, ICurrentUserService currentUserService)
+    public CarsApiController(
+        CarExpesesDbContext dbContext,
+        ICurrentUserService currentUserService,
+        ICarRepository carRepository)
     {
         this.dbContext = dbContext;
         this.currentUserService = currentUserService;
+        this.carRepository = carRepository;
     }
 
     [HttpGet]
@@ -32,38 +38,17 @@ public sealed class CarsApiController : ControllerBase
         [FromQuery] int? minYear,
         [FromQuery] int? maxYear)
     {
-        var query = dbContext.Cars
+        var cars = await carRepository
+            .Query(new CarFilter
+            {
+                Search = search,
+                UserId = userId,
+                FuelType = fuelType,
+                MinYear = minYear,
+                MaxYear = maxYear
+            })
             .Include(car => car.User)
-            .AsNoTracking()
-            .AsQueryable();
-
-        if (userId.HasValue)
-        {
-            query = query.Where(car => car.UserId == userId.Value);
-        }
-
-        if (fuelType.HasValue)
-        {
-            query = query.Where(car => car.FuelType == fuelType.Value);
-        }
-
-        if (minYear.HasValue)
-        {
-            query = query.Where(car => car.Year >= minYear.Value);
-        }
-
-        if (maxYear.HasValue)
-        {
-            query = query.Where(car => car.Year <= maxYear.Value);
-        }
-
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            var term = search.Trim();
-            query = query.Where(car => car.Brand.Contains(term) || car.Model.Contains(term));
-        }
-
-        var cars = await query.OrderBy(car => car.Id).ToListAsync();
+            .ToListAsync();
         var result = cars.Select(DtoMapping.ToListItemDto).ToList();
         return Ok(result);
     }

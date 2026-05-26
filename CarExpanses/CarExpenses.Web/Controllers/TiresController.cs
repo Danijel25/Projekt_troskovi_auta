@@ -17,24 +17,8 @@ public class TiresController(ITireRepository repository) : Controller
     [Route("pretraga")]
     public IActionResult Search(string? query)
     {
-        var tires = repository.GetAll();
-
-        if (string.IsNullOrWhiteSpace(query))
-        {
-            return PartialView("_TireList", tires);
-        }
-
-        var term = query.Trim();
-        var filtered = tires
-            .Where(tire =>
-                tire.Brand.Contains(term, StringComparison.OrdinalIgnoreCase)
-                || tire.Model.Contains(term, StringComparison.OrdinalIgnoreCase)
-                || tire.Season.Contains(term, StringComparison.OrdinalIgnoreCase)
-                || tire.Price.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
-                || tire.Id.ToString().Contains(term, StringComparison.OrdinalIgnoreCase))
-            .ToList();
-
-        return PartialView("_TireList", filtered);
+        var tires = repository.Query(new TireFilter { Search = query }).ToList();
+        return PartialView("_TireList", tires);
     }
 
     [Route("detalji/{id}")]

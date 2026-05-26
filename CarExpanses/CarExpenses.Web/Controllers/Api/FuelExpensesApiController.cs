@@ -1,4 +1,5 @@
 using CarExpenses.DAL;
+using CarExpenses.DAL.Repositories;
 using CarExpenses.Model.Models;
 using CarExpenses.Web.Api.Dtos;
 using CarExpenses.Web.Api.Mapping;
@@ -14,10 +15,12 @@ namespace CarExpenses.Web.Controllers.Api;
 public sealed class FuelExpensesApiController : ControllerBase
 {
     private readonly CarExpesesDbContext dbContext;
+    private readonly IFuelExpenseRepository fuelExpenseRepository;
 
-    public FuelExpensesApiController(CarExpesesDbContext dbContext)
+    public FuelExpensesApiController(CarExpesesDbContext dbContext, IFuelExpenseRepository fuelExpenseRepository)
     {
         this.dbContext = dbContext;
+        this.fuelExpenseRepository = fuelExpenseRepository;
     }
 
     [HttpGet]
@@ -28,37 +31,16 @@ public sealed class FuelExpensesApiController : ControllerBase
         [FromQuery] decimal? minLiters,
         [FromQuery] decimal? maxLiters)
     {
-        var query = dbContext.FuelExpenses
-            .Include(item => item.Car)
-            .AsNoTracking()
-            .AsQueryable();
-
-        if (carId.HasValue)
-        {
-            query = query.Where(item => item.CarId == carId.Value);
-        }
-
-        if (fromDate.HasValue)
-        {
-            query = query.Where(item => item.FuelExpenseDate >= fromDate.Value);
-        }
-
-        if (toDate.HasValue)
-        {
-            query = query.Where(item => item.FuelExpenseDate <= toDate.Value);
-        }
-
-        if (minLiters.HasValue)
-        {
-            query = query.Where(item => item.Liters >= minLiters.Value);
-        }
-
-        if (maxLiters.HasValue)
-        {
-            query = query.Where(item => item.Liters <= maxLiters.Value);
-        }
-
-        var fuelExpenses = await query.OrderByDescending(item => item.FuelExpenseDate).ToListAsync();
+        var fuelExpenses = await fuelExpenseRepository
+            .Query(new FuelExpenseFilter
+            {
+                CarId = carId,
+                FromDate = fromDate,
+                ToDate = toDate,
+                MinLiters = minLiters,
+                MaxLiters = maxLiters
+            })
+            .ToListAsync();
         var result = fuelExpenses.Select(DtoMapping.ToDto).ToList();
         return Ok(result);
     }

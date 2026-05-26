@@ -15,20 +15,8 @@ public class ExpenseCategoriesController(IExpenseCategoryRepository repository, 
 	[HttpGet]
 	public IActionResult Search(string? query)
 	{
-		var categories = repository.GetAll();
-		if (string.IsNullOrWhiteSpace(query))
-		{
-			return PartialView("_ExpenseCategoryList", categories);
-		}
-
-		var term = query.Trim();
-		var filtered = categories
-			.Where(category =>
-				category.Name.Contains(term, StringComparison.OrdinalIgnoreCase)
-				|| category.Id.ToString().Contains(term, StringComparison.OrdinalIgnoreCase))
-			.ToList();
-
-		return PartialView("_ExpenseCategoryList", filtered);
+		var categories = repository.Query(new ExpenseCategoryFilter { Search = query }).ToList();
+		return PartialView("_ExpenseCategoryList", categories);
 	}
 
 	public IActionResult Details(int id)

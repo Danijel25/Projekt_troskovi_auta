@@ -1,3 +1,4 @@
+using CarExpenses.DAL.Repositories;
 using CarExpenses.Model.Models;
 using CarExpenses.Model.Security;
 using CarExpenses.Web.Api.Dtos;
@@ -15,26 +16,20 @@ namespace CarExpenses.Web.Controllers.Api;
 public sealed class UsersApiController : ControllerBase
 {
     private readonly UserManager<User> userManager;
+    private readonly IUserRepository userRepository;
 
-    public UsersApiController(UserManager<User> userManager)
+    public UsersApiController(UserManager<User> userManager, IUserRepository userRepository)
     {
         this.userManager = userManager;
+        this.userRepository = userRepository;
     }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<UserSummaryDto>>> GetAll([FromQuery] string? search)
     {
-        var query = userManager.Users.AsNoTracking().AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            var term = search.Trim();
-            query = query.Where(user =>
-                (user.UserName != null && user.UserName.Contains(term))
-                || (user.Email != null && user.Email.Contains(term)));
-        }
-
-        var users = await query.OrderBy(user => user.Id).ToListAsync();
+        var users = await userRepository
+            .Query(new UserFilter { Search = search })
+            .ToListAsync();
         var result = users.Select(DtoMapping.ToSummaryDto).ToList();
         return Ok(result);
     }
