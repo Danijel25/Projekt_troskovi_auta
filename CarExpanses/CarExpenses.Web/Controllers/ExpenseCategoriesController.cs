@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace CarExpenses.Web.Controllers;
 
 [Authorize]
-public class ExpenseCategoriesController(IExpenseCategoryRepository repository) : Controller
+public class ExpenseCategoriesController(IExpenseCategoryRepository repository, Serilog.ILogger logger) : Controller
 {
 	public IActionResult Index() => View(repository.GetAll());
 
@@ -46,13 +46,24 @@ public class ExpenseCategoriesController(IExpenseCategoryRepository repository) 
 	[ValidateAntiForgeryToken]
 	public IActionResult Create(ExpenseCategoryFormViewModel formModel)
 	{
-		if (!ModelState.IsValid)
+		logger.Information("Attempting to create expense category {CategoryName}", formModel.Name);
+		logger.Debug("Received form data: {@FormModel}", formModel);
+		try
 		{
+			if (!ModelState.IsValid)
+			{
+				return View("Form", formModel);
+			}	
+
+			repository.Add(new ExpenseCategory { Name = formModel.Name });
+			return RedirectToAction(nameof(Index));
+		} 
+		catch(Exception ex)
+		{
+			logger.Error(ex, "Error creating expense category");
+			ModelState.AddModelError(string.Empty, "An error occurred while creating the expense category. Please try again.");
 			return View("Form", formModel);
 		}
-
-		repository.Add(new ExpenseCategory { Name = formModel.Name });
-		return RedirectToAction(nameof(Index));
 	}
 
 	[Authorize(Roles = AppRoles.Admin)]

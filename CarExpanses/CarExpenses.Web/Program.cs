@@ -6,7 +6,18 @@ using CarExpenses.Model.Models;
 using CarExpenses.Model.Security;
 using CarExpenses.Web.Services;
 using Microsoft.AspNetCore.Identity;
+using Serilog;
+using Serilog.Events;
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, loggerConfiguration) =>
+    loggerConfiguration
+        .MinimumLevel.Information()
+        .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+        .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+        .Enrich.FromLogContext()
+        //.WriteTo.ColoredConsole()
+        .WriteTo.File("logs/serilog-.log", rollingInterval: RollingInterval.Day));
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -68,6 +79,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+
+app.UseSerilogRequestLogging();
 
 app.UseAuthentication();
 app.UseAuthorization();
