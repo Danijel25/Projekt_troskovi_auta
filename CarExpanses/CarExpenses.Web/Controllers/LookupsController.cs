@@ -1,9 +1,7 @@
 using CarExpenses.DAL.Repositories;
-using CarExpenses.Model.Models;
 using CarExpenses.Model.Security;
 using CarExpenses.Web.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CarExpenses.Web.Controllers;
@@ -11,7 +9,7 @@ namespace CarExpenses.Web.Controllers;
 [Authorize]
 [Route("lookup")]
 public class LookupsController(
-    UserManager<User> userManager,
+    IUserRepository userRepository,
     ICarRepository carRepository,
     ITireRepository tireRepository,
     IExpenseCategoryRepository expenseCategoryRepository) : Controller
@@ -42,16 +40,7 @@ public class LookupsController(
 
     private List<LookupItemViewModel> GetUsers(string? term, int limit)
     {
-        var users = userManager.Users.AsQueryable();
-        if (!string.IsNullOrWhiteSpace(term))
-        {
-            users = users.Where(user =>
-                (user.UserName != null && user.UserName.Contains(term))
-                || (user.Email != null && user.Email.Contains(term))
-                || user.Id.ToString().Contains(term));
-        }
-
-        return users
+        return userRepository.Query(new UserFilter { Search = term })
             .OrderBy(user => user.UserName)
             .Take(limit)
             .Select(user => new LookupItemViewModel
@@ -65,17 +54,7 @@ public class LookupsController(
 
     private List<LookupItemViewModel> GetCars(string? term, int limit)
     {
-        var cars = carRepository.GetAll();
-        var filtered = string.IsNullOrWhiteSpace(term)
-            ? cars
-            : cars.Where(car =>
-                car.Brand.Contains(term, StringComparison.OrdinalIgnoreCase)
-                || car.Model.Contains(term, StringComparison.OrdinalIgnoreCase)
-                || car.Year.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
-                || car.FuelType.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
-                || car.Id.ToString().Contains(term, StringComparison.OrdinalIgnoreCase));
-
-        return filtered
+        return carRepository.Query(new CarFilter { Search = term })
             .OrderBy(car => car.Brand)
             .ThenBy(car => car.Model)
             .Take(limit)
@@ -90,16 +69,7 @@ public class LookupsController(
 
     private List<LookupItemViewModel> GetTires(string? term, int limit)
     {
-        var tires = tireRepository.GetAll();
-        var filtered = string.IsNullOrWhiteSpace(term)
-            ? tires
-            : tires.Where(tire =>
-                tire.Brand.Contains(term, StringComparison.OrdinalIgnoreCase)
-                || tire.Model.Contains(term, StringComparison.OrdinalIgnoreCase)
-                || tire.Season.Contains(term, StringComparison.OrdinalIgnoreCase)
-                || tire.Id.ToString().Contains(term, StringComparison.OrdinalIgnoreCase));
-
-        return filtered
+        return tireRepository.Query(new TireFilter { Search = term })
             .OrderBy(tire => tire.Brand)
             .ThenBy(tire => tire.Model)
             .Take(limit)
@@ -114,14 +84,7 @@ public class LookupsController(
 
     private List<LookupItemViewModel> GetCategories(string? term, int limit)
     {
-        var categories = expenseCategoryRepository.GetAll();
-        var filtered = string.IsNullOrWhiteSpace(term)
-            ? categories
-            : categories.Where(category =>
-                category.Name.Contains(term, StringComparison.OrdinalIgnoreCase)
-                || category.Id.ToString().Contains(term, StringComparison.OrdinalIgnoreCase));
-
-        return filtered
+        return expenseCategoryRepository.Query(new ExpenseCategoryFilter { Search = term })
             .OrderBy(category => category.Name)
             .Take(limit)
             .Select(category => new LookupItemViewModel

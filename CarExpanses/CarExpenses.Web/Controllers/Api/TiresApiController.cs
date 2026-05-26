@@ -1,4 +1,5 @@
 using CarExpenses.DAL;
+using CarExpenses.DAL.Repositories;
 using CarExpenses.Model.Models;
 using CarExpenses.Web.Api.Dtos;
 using CarExpenses.Web.Api.Mapping;
@@ -14,10 +15,12 @@ namespace CarExpenses.Web.Controllers.Api;
 public sealed class TiresApiController : ControllerBase
 {
     private readonly CarExpesesDbContext dbContext;
+    private readonly ITireRepository tireRepository;
 
-    public TiresApiController(CarExpesesDbContext dbContext)
+    public TiresApiController(CarExpesesDbContext dbContext, ITireRepository tireRepository)
     {
         this.dbContext = dbContext;
+        this.tireRepository = tireRepository;
     }
 
     [HttpGet]
@@ -27,31 +30,15 @@ public sealed class TiresApiController : ControllerBase
         [FromQuery] decimal? minPrice,
         [FromQuery] decimal? maxPrice)
     {
-        var query = dbContext.Tires.AsNoTracking().AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            var term = search.Trim();
-            query = query.Where(tire => tire.Brand.Contains(term) || tire.Model.Contains(term));
-        }
-
-        if (!string.IsNullOrWhiteSpace(season))
-        {
-            var term = season.Trim();
-            query = query.Where(tire => tire.Season.Contains(term));
-        }
-
-        if (minPrice.HasValue)
-        {
-            query = query.Where(tire => tire.Price >= minPrice.Value);
-        }
-
-        if (maxPrice.HasValue)
-        {
-            query = query.Where(tire => tire.Price <= maxPrice.Value);
-        }
-
-        var tires = await query.OrderBy(tire => tire.Id).ToListAsync();
+        var tires = await tireRepository
+            .Query(new TireFilter
+            {
+                Search = search,
+                Season = season,
+                MinPrice = minPrice,
+                MaxPrice = maxPrice
+            })
+            .ToListAsync();
         var result = tires.Select(DtoMapping.ToSummaryDto).ToList();
         return Ok(result);
     }

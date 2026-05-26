@@ -1,4 +1,5 @@
 using CarExpenses.DAL;
+using CarExpenses.DAL.Repositories;
 using CarExpenses.Model.Models;
 using CarExpenses.Web.Api.Dtos;
 using CarExpenses.Web.Api.Mapping;
@@ -14,10 +15,12 @@ namespace CarExpenses.Web.Controllers.Api;
 public sealed class ExpensesApiController : ControllerBase
 {
     private readonly CarExpesesDbContext dbContext;
+    private readonly IExpenseRepository expenseRepository;
 
-    public ExpensesApiController(CarExpesesDbContext dbContext)
+    public ExpensesApiController(CarExpesesDbContext dbContext, IExpenseRepository expenseRepository)
     {
         this.dbContext = dbContext;
+        this.expenseRepository = expenseRepository;
     }
 
     [HttpGet]
@@ -30,51 +33,18 @@ public sealed class ExpensesApiController : ControllerBase
         [FromQuery] decimal? minAmount,
         [FromQuery] decimal? maxAmount)
     {
-        var query = dbContext.Expenses
-            .Include(item => item.Category)
-            .AsNoTracking()
-            .AsQueryable();
-
-        if (categoryId.HasValue)
+        var query = expenseRepository.Query(new ExpenseFilter
         {
-            query = query.Where(item => item.CategoryId == categoryId.Value);
-        }
-
-        if (carId.HasValue)
-        {
-            query = query.Where(item => item.CarId == carId.Value);
-        }
-
-        if (fromDate.HasValue)
-        {
-            query = query.Where(item => item.Date >= fromDate.Value);
-        }
-
-        if (toDate.HasValue)
-        {
-            query = query.Where(item => item.Date <= toDate.Value);
-        }
-
-        if (minAmount.HasValue)
-        {
-            query = query.Where(item => item.Amount >= minAmount.Value);
-        }
-
-        if (maxAmount.HasValue)
-        {
-            query = query.Where(item => item.Amount <= maxAmount.Value);
-        }
-
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            var term = search.Trim();
-            query = query.Where(item =>
-                item.Description.Contains(term)
-                || (item.Category != null && item.Category.Name.Contains(term)));
-        }
+            Search = search,
+            CategoryId = categoryId,
+            CarId = carId,
+            FromDate = fromDate,
+            ToDate = toDate,
+            MinAmount = minAmount,
+            MaxAmount = maxAmount
+        });
 
         var items = await query
-            .OrderByDescending(item => item.Date)
             .Select(item => new ExpenseListItemDto
             {
                 Id = item.Id,

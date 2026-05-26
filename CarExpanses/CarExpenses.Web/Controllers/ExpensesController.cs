@@ -15,25 +15,8 @@ public class ExpensesController(IExpenseRepository repository, IExpenseCategoryR
     [HttpGet]
     public IActionResult Search(string? query)
     {
-        var expenses = repository.GetAll();
-
-        if (string.IsNullOrWhiteSpace(query))
-        {
-            return PartialView("_ExpenseList", expenses);
-        }
-
-        var term = query.Trim();
-        var filtered = expenses
-            .Where(expense =>
-                expense.Description.Contains(term, StringComparison.OrdinalIgnoreCase)
-                || expense.Amount.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
-                || expense.Date.ToString("yyyy-MM-dd").Contains(term, StringComparison.OrdinalIgnoreCase)
-                || expense.Date.ToString("MM/dd").Contains(term, StringComparison.OrdinalIgnoreCase)
-                || expense.Id.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
-                || (expense.Category?.Name.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false))
-            .ToList();
-
-        return PartialView("_ExpenseList", filtered);
+        var expenses = repository.Query(new ExpenseFilter { Search = query }).ToList();
+        return PartialView("_ExpenseList", expenses);
     }
 
     public IActionResult Details(int id)

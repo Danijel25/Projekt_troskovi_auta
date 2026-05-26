@@ -15,28 +15,8 @@ public class InsurancesController(IInsuranceRepository repository, ICarRepositor
     [HttpGet]
     public IActionResult Search(string? query)
     {
-        var insurances = repository.GetAll();
-
-        if (string.IsNullOrWhiteSpace(query))
-        {
-            return PartialView("_InsuranceList", insurances);
-        }
-
-        var term = query.Trim();
-        var filtered = insurances
-            .Where(insurance =>
-                insurance.Company.Contains(term, StringComparison.OrdinalIgnoreCase)
-                || insurance.InsuranceType.Contains(term, StringComparison.OrdinalIgnoreCase)
-                || insurance.Price.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
-                || insurance.StartDate.ToString("yyyy-MM-dd").Contains(term, StringComparison.OrdinalIgnoreCase)
-                || insurance.EndDate.ToString("yyyy-MM-dd").Contains(term, StringComparison.OrdinalIgnoreCase)
-                || insurance.CarId.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
-                || insurance.Id.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
-                || (insurance.Car?.Brand?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
-                || (insurance.Car?.Model?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false))
-            .ToList();
-
-        return PartialView("_InsuranceList", filtered);
+        var insurances = repository.Query(new InsuranceFilter { Search = query }).ToList();
+        return PartialView("_InsuranceList", insurances);
     }
 
     public IActionResult Details(int id)

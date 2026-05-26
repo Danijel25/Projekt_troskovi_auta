@@ -25,26 +25,8 @@ public class CarsController(ICarRepository carRepository, UserManager<User> user
     [Route("pretraga")]
     public IActionResult Search(string? query)
     {
-        var cars = carRepository.GetAll();
-
-        if (string.IsNullOrWhiteSpace(query))
-        {
-            return PartialView("_CarList", cars);
-        }
-
-        var term = query.Trim();
-        var filteredCars = cars
-            .Where(car =>
-                car.Brand.Contains(term, StringComparison.OrdinalIgnoreCase)
-                || car.Model.Contains(term, StringComparison.OrdinalIgnoreCase)
-                || car.FuelType.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
-                || car.Year.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
-                || car.EngineVolume.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
-                || car.CurrentMilage.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
-                || car.Id.ToString().Contains(term, StringComparison.OrdinalIgnoreCase))
-            .ToList();
-
-        return PartialView("_CarList", filteredCars);
+        var cars = carRepository.Query(new CarFilter { Search = query }).ToList();
+        return PartialView("_CarList", cars);
     }
 
     [Route("detalji/{id}")]

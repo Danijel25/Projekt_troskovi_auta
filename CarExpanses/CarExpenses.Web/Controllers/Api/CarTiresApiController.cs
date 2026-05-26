@@ -1,4 +1,5 @@
 using CarExpenses.DAL;
+using CarExpenses.DAL.Repositories;
 using CarExpenses.Model.Models;
 using CarExpenses.Web.Api.Dtos;
 using CarExpenses.Web.Api.Mapping;
@@ -14,10 +15,12 @@ namespace CarExpenses.Web.Controllers.Api;
 public sealed class CarTiresApiController : ControllerBase
 {
     private readonly CarExpesesDbContext dbContext;
+    private readonly ICarTireRepository carTireRepository;
 
-    public CarTiresApiController(CarExpesesDbContext dbContext)
+    public CarTiresApiController(CarExpesesDbContext dbContext, ICarTireRepository carTireRepository)
     {
         this.dbContext = dbContext;
+        this.carTireRepository = carTireRepository;
     }
 
     [HttpGet]
@@ -27,33 +30,15 @@ public sealed class CarTiresApiController : ControllerBase
         [FromQuery] DateTime? fromDate,
         [FromQuery] DateTime? toDate)
     {
-        var query = dbContext.CarTires
-            .Include(item => item.Car)
-            .Include(item => item.Tire)
-            .AsNoTracking()
-            .AsQueryable();
-
-        if (carId.HasValue)
-        {
-            query = query.Where(item => item.CarId == carId.Value);
-        }
-
-        if (tireId.HasValue)
-        {
-            query = query.Where(item => item.TireId == tireId.Value);
-        }
-
-        if (fromDate.HasValue)
-        {
-            query = query.Where(item => item.InstalledDate >= fromDate.Value);
-        }
-
-        if (toDate.HasValue)
-        {
-            query = query.Where(item => item.InstalledDate <= toDate.Value);
-        }
-
-        var carTires = await query.OrderByDescending(item => item.InstalledDate).ToListAsync();
+        var carTires = await carTireRepository
+            .Query(new CarTireFilter
+            {
+                CarId = carId,
+                TireId = tireId,
+                FromDate = fromDate,
+                ToDate = toDate
+            })
+            .ToListAsync();
         var result = carTires.Select(DtoMapping.ToDto).ToList();
         return Ok(result);
     }

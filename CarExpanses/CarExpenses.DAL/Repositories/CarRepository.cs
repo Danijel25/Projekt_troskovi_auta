@@ -1,15 +1,58 @@
+using CarExpenses.Model.Enums;
 using CarExpenses.Model.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 
 namespace CarExpenses.DAL.Repositories;
 
 public sealed class CarRepository(CarExpesesDbContext dbContext) : ICarRepository
 {
-    public IReadOnlyList<Car> GetAll() => dbContext.Cars
-        .Include(car => car.Expenses)
-        .AsNoTracking()
-        .OrderBy(car => car.Id)
-        .ToList();
+    public IQueryable<Car> Query(CarFilter filter)
+    {
+        var query = dbContext.Cars
+            .Include(car => car.Expenses)
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (filter.UserId.HasValue)
+        {
+            query = query.Where(car => car.UserId == filter.UserId.Value);
+        }
+
+        if (filter.FuelType.HasValue)
+        {
+            query = query.Where(car => car.FuelType == filter.FuelType.Value);
+        }
+
+        if (filter.MinYear.HasValue)
+        {
+            query = query.Where(car => car.Year >= filter.MinYear.Value);
+        }
+
+        if (filter.MaxYear.HasValue)
+        {
+            query = query.Where(car => car.Year <= filter.MaxYear.Value);
+        }
+
+        var term = filter.Search?.Trim();
+        if (!string.IsNullOrWhiteSpace(term))
+        {
+            var hasInt = int.TryParse(term, NumberStyles.Integer, CultureInfo.CurrentCulture, out var intValue);
+            var hasEngine = double.TryParse(term, NumberStyles.Any, CultureInfo.CurrentCulture, out var engineValue);
+            var hasFuelType = Enum.TryParse<FuelType>(term, true, out var fuelTypeValue);
+
+            query = query.Where(car =>
+                car.Brand.Contains(term)
+                || car.Model.Contains(term)
+                || (hasFuelType && car.FuelType == fuelTypeValue)
+                || (hasInt && (car.Year == intValue || car.CurrentMilage == intValue || car.Id == intValue))
+                || (hasEngine && car.EngineVolume == engineValue));
+        }
+
+        return query.OrderBy(car => car.Id);
+    }
+
+    public IReadOnlyList<Car> GetAll() => Query(new CarFilter()).ToList();
 
     public Car? GetById(int id) => dbContext.Cars
         .Include(car => car.FuelExpenses)

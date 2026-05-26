@@ -1,4 +1,5 @@
 using CarExpenses.DAL;
+using CarExpenses.DAL.Repositories;
 using CarExpenses.Model.Models;
 using CarExpenses.Model.Security;
 using CarExpenses.Web.Api.Dtos;
@@ -15,24 +16,22 @@ namespace CarExpenses.Web.Controllers.Api;
 public sealed class ExpenseCategoriesApiController : ControllerBase
 {
     private readonly CarExpesesDbContext dbContext;
+    private readonly IExpenseCategoryRepository expenseCategoryRepository;
 
-    public ExpenseCategoriesApiController(CarExpesesDbContext dbContext)
+    public ExpenseCategoriesApiController(
+        CarExpesesDbContext dbContext,
+        IExpenseCategoryRepository expenseCategoryRepository)
     {
         this.dbContext = dbContext;
+        this.expenseCategoryRepository = expenseCategoryRepository;
     }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ExpenseCategoryDto>>> GetAll([FromQuery] string? search)
     {
-        var query = dbContext.ExpenseCategories.AsNoTracking().AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            var term = search.Trim();
-            query = query.Where(category => category.Name.Contains(term));
-        }
-
-        var categories = await query.OrderBy(category => category.Id).ToListAsync();
+        var categories = await expenseCategoryRepository
+            .Query(new ExpenseCategoryFilter { Search = search })
+            .ToListAsync();
         var result = categories.Select(DtoMapping.ToDto).ToList();
         return Ok(result);
     }

@@ -16,27 +16,8 @@ public class CarTiresController(ICarTireRepository repository, ICarRepository ca
     [HttpGet]
     public IActionResult Search(string? query)
     {
-        var assignments = repository.GetAll();
-
-        if (string.IsNullOrWhiteSpace(query))
-        {
-            return PartialView("_CarTireList", assignments);
-        }
-
-        var term = query.Trim();
-        var filtered = assignments
-            .Where(item =>
-                item.CarId.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
-                || item.TireId.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
-                || item.InstalledDate.ToString("yyyy-MM-dd").Contains(term, StringComparison.OrdinalIgnoreCase)
-                || (item.Car?.Brand?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
-                || (item.Car?.Model?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
-                || (item.Tire?.Brand?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
-                || (item.Tire?.Model?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
-                || (item.Tire?.Season?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false))
-            .ToList();
-
-        return PartialView("_CarTireList", filtered);
+        var assignments = repository.Query(new CarTireFilter { Search = query }).ToList();
+        return PartialView("_CarTireList", assignments);
     }
 
     public IActionResult Details(int id)

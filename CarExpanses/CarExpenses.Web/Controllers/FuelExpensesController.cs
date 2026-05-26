@@ -16,28 +16,8 @@ public class FuelExpensesController(IFuelExpenseRepository repository, ICarRepos
     [HttpGet]
     public IActionResult Search(string? query)
     {
-        var fuelExpenses = repository.GetAll();
-
-        if (string.IsNullOrWhiteSpace(query))
-        {
-            return PartialView("_FuelExpenseList", fuelExpenses);
-        }
-
-        var term = query.Trim();
-        var filtered = fuelExpenses
-            .Where(expense =>
-                expense.CarId.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
-                || expense.TotalCost.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
-                || expense.Liters.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
-                || expense.PricePerLiter.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
-                || expense.Kilometars.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
-                || expense.FuelExpenseDate.ToString("yyyy-MM-dd").Contains(term, StringComparison.OrdinalIgnoreCase)
-                || expense.Id.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
-                || (expense.Car?.Brand?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
-                || (expense.Car?.Model?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false))
-            .ToList();
-
-        return PartialView("_FuelExpenseList", filtered);
+        var fuelExpenses = repository.Query(new FuelExpenseFilter { Search = query }).ToList();
+        return PartialView("_FuelExpenseList", fuelExpenses);
     }
 
     public IActionResult Details(int id)

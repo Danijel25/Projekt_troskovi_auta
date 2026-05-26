@@ -5,11 +5,26 @@ namespace CarExpenses.DAL.Repositories;
 
 public sealed class ExpenseCategoryRepository(CarExpesesDbContext dbContext) : IExpenseCategoryRepository
 {
-    public IReadOnlyList<ExpenseCategory> GetAll() => dbContext.ExpenseCategories
-        .Include(category => category.Expenses)
-        .AsNoTracking()
-        .OrderBy(category => category.Id)
-        .ToList();
+    public IQueryable<ExpenseCategory> Query(ExpenseCategoryFilter filter)
+    {
+        var query = dbContext.ExpenseCategories
+            .Include(category => category.Expenses)
+            .AsNoTracking()
+            .AsQueryable();
+
+        var term = filter.Search?.Trim();
+        if (!string.IsNullOrWhiteSpace(term))
+        {
+            var hasId = int.TryParse(term, out var idValue);
+            query = query.Where(category =>
+                category.Name.Contains(term)
+                || (hasId && category.Id == idValue));
+        }
+
+        return query.OrderBy(category => category.Id);
+    }
+
+    public IReadOnlyList<ExpenseCategory> GetAll() => Query(new ExpenseCategoryFilter()).ToList();
 
     public ExpenseCategory? GetById(int id) => dbContext.ExpenseCategories
         .Include(category => category.Expenses)
