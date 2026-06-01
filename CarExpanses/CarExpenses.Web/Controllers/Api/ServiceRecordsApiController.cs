@@ -25,20 +25,10 @@ public sealed class ServiceRecordsApiController : ControllerBase
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ServiceRecordDto>>> GetAll(
-        [FromQuery] string? search,
-        [FromQuery] int? carId,
-        [FromQuery] DateTime? fromDate,
-        [FromQuery] DateTime? toDate)
+        [FromQuery] ServiceRecordFilter filter)
     {
         var serviceRecords = await serviceRecordRepository
-            .Query(new ServiceRecordFilter
-            {
-                Search = search,
-                CarId = carId,
-                FromDate = fromDate,
-                ToDate = toDate
-            })
-            .ToListAsync();
+            .GetListAsync(filter);
         var result = serviceRecords.Select(DtoMapping.ToDto).ToList();
         return Ok(result);
     }
@@ -46,10 +36,7 @@ public sealed class ServiceRecordsApiController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<ActionResult<ServiceRecordDto>> GetById(int id)
     {
-        var serviceRecord = await dbContext.ServiceRecords
-            .Include(item => item.Car)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(item => item.Id == id);
+        var serviceRecord = await serviceRecordRepository.GetByIdAsync(id);
 
         if (serviceRecord is null)
         {
@@ -78,13 +65,9 @@ public sealed class ServiceRecordsApiController : ControllerBase
             CarId = dto.CarId
         };
 
-        dbContext.ServiceRecords.Add(serviceRecord);
-        await dbContext.SaveChangesAsync();
+        var serviceRecordId = await serviceRecordRepository.AddAsync(serviceRecord);
 
-        var created = await dbContext.ServiceRecords
-            .Include(item => item.Car)
-            .AsNoTracking()
-            .FirstAsync(item => item.Id == serviceRecord.Id);
+        var created = await serviceRecordRepository.GetByIdAsync(serviceRecordId);
 
         return CreatedAtAction(nameof(GetById), new { id = serviceRecord.Id }, DtoMapping.ToDto(created));
     }
@@ -92,7 +75,7 @@ public sealed class ServiceRecordsApiController : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, ServiceRecordUpdateDto dto)
     {
-        var serviceRecord = await dbContext.ServiceRecords.FirstOrDefaultAsync(item => item.Id == id);
+        var serviceRecord = await serviceRecordRepository.GetByIdAsync(id);
         if (serviceRecord is null)
         {
             return NotFound();
@@ -104,28 +87,29 @@ public sealed class ServiceRecordsApiController : ControllerBase
             return ValidationProblem(ModelState);
         }
 
-        serviceRecord.ServiceType = dto.ServiceType;
-        serviceRecord.Description = dto.Description;
-        serviceRecord.Cost = dto.Cost;
-        serviceRecord.ServiceDate = dto.ServiceDate;
-        serviceRecord.Mileage = dto.Mileage;
-        serviceRecord.CarId = dto.CarId;
-
-        await dbContext.SaveChangesAsync();
+        await serviceRecordRepository.UpdateAsync(new()
+        {
+            Id = id,
+            ServiceType = dto.ServiceType,
+            Description = dto.Description,
+            Cost = dto.Cost,
+            ServiceDate = dto.ServiceDate,
+            Mileage = dto.Mileage,
+            CarId = dto.CarId
+        });
         return NoContent();
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var serviceRecord = await dbContext.ServiceRecords.FirstOrDefaultAsync(item => item.Id == id);
+        var serviceRecord = await serviceRecordRepository.GetByIdAsync(id);
         if (serviceRecord is null)
         {
             return NotFound();
         }
 
-        dbContext.ServiceRecords.Remove(serviceRecord);
-        await dbContext.SaveChangesAsync();
+        await serviceRecordRepository.DeleteAsync(id);
         return NoContent();
     }
 }

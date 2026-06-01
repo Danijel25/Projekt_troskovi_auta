@@ -31,7 +31,7 @@ internal static class DtoMapping
         CurrentMilage = car.CurrentMilage
     };
 
-    public static CarListItemDto ToListItemDto(Car car) => new()
+    public static CarListItemDto ToDto(Car car) => new()
     {
         Id = car.Id,
         UserId = car.UserId,
@@ -185,6 +185,18 @@ internal static class DtoMapping
         Id = category.Id,
         Name = category.Name,
         Expenses = category.Expenses?.Select(ToSummaryDto).ToList() ?? []
+    };
+
+    public static ExpenseDetailDto ToDto(Expense expense) => new()
+    {
+        Id = expense.Id,
+        Description = expense.Description,
+        Amount = expense.Amount,
+        Date = expense.Date,
+        CarId = expense.CarId,
+        Car = expense.Car is null ? null : ToSummaryDto(expense.Car),
+        CategoryId = expense.CategoryId,
+        Category = expense.Category is null ? null : ToDto(expense.Category)
     };
 
     public static ExpenseSummaryDto ToSummaryDto(Expense expense) => new()

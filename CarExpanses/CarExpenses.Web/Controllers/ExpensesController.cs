@@ -10,40 +10,40 @@ namespace CarExpenses.Web.Controllers;
 [Authorize]
 public class ExpensesController(IExpenseRepository repository, IExpenseCategoryRepository categoryRepository, ICarRepository carRepository) : Controller
 {
-    public IActionResult Index() => View(repository.GetAll());
+    public async Task<IActionResult> Index() => View(await repository.GetAllAsync());
 
     [HttpGet]
-    public IActionResult Search(string? query)
+    public async Task<IActionResult> Search(string? query)
     {
-        var expenses = repository.Query(new ExpenseFilter { Search = query }).ToList();
+        var expenses = await repository.GetListAsync(new ExpenseFilter { Search = query });
         return PartialView("_ExpenseList", expenses);
     }
 
-    public IActionResult Details(int id)
+    public async Task<IActionResult> Details(int id)
     {
-        var expense = repository.GetById(id);
+        var expense = await repository.GetByIdAsync(id);
         return expense is null ? NotFound() : View(expense);
     }
 
     [HttpGet]
-    public IActionResult Create() => View("Form", BuildFormModel());
+    public async Task<IActionResult> Create() => View("Form", await BuildFormModel());
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Create(ExpenseFormViewModel formModel)
+    public async Task<IActionResult> Create(ExpenseFormViewModel formModel)
     {
         if (!ModelState.IsValid)
         {
             return View("Form", BuildFormModel(formModel));
         }
 
-        if (carRepository.GetById(formModel.CarId) is null)
+        if (await carRepository.GetByIdAsync(formModel.CarId) is null)
         {
             ModelState.AddModelError(nameof(formModel.CarId), "Car not found.");
             return View("Form", BuildFormModel(formModel));
         }
 
-        repository.Add(new Expense
+        await repository.AddAsync(new Expense
         {
             Description = formModel.Description,
             Amount = formModel.Amount,
@@ -56,15 +56,15 @@ public class ExpensesController(IExpenseRepository repository, IExpenseCategoryR
     }
 
     [HttpGet]
-    public IActionResult Edit(int id)
+    public async Task<IActionResult> Edit(int id)
     {
-        var expense = repository.GetById(id);
-        return expense is null ? NotFound() : View("Form", BuildFormModel(expense));
+        var expense = await repository.GetByIdAsync(id);
+        return expense is null ? NotFound() : View("Form", await BuildFormModel(expense));
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Edit(int id, ExpenseFormViewModel formModel)
+    public async Task<IActionResult> Edit(int id, ExpenseFormViewModel formModel)
     {
         if (id != formModel.Id)
         {
@@ -76,7 +76,7 @@ public class ExpensesController(IExpenseRepository repository, IExpenseCategoryR
             return View("Form", BuildFormModel(formModel));
         }
 
-        if (carRepository.GetById(formModel.CarId) is null)
+        if (await carRepository.GetByIdAsync(formModel.CarId) is null)
         {
             ModelState.AddModelError(nameof(formModel.CarId), "Car not found.");
             return View("Form", BuildFormModel(formModel));
@@ -93,7 +93,7 @@ public class ExpensesController(IExpenseRepository repository, IExpenseCategoryR
             CarId = formModel.CarId
         };
 
-        if (!repository.Update(expense))
+        if (!await repository.UpdateAsync(expense))
         {
             return NotFound();
         }
@@ -101,24 +101,24 @@ public class ExpensesController(IExpenseRepository repository, IExpenseCategoryR
     }
 
     [HttpGet]
-    public IActionResult Delete(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        var expense = repository.GetById(id);
+        var expense = await repository.GetByIdAsync(id);
         return expense is null ? NotFound() : View(expense);
     }
 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public IActionResult DeleteConfirmed(int id)
+    public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        if (!repository.Delete(id))
+        if (!await repository.DeleteAsync(id))
         {
             return NotFound();
         }
         return RedirectToAction(nameof(Index));
     }
 
-    private ExpenseFormViewModel BuildFormModel(Expense? expense = null)
+    private async Task<ExpenseFormViewModel> BuildFormModel(Expense? expense = null)
     {
         return new ExpenseFormViewModel
         {
@@ -128,11 +128,11 @@ public class ExpensesController(IExpenseRepository repository, IExpenseCategoryR
             Date = expense?.Date ?? DateTime.Today,
             CategoryId = expense?.CategoryId ?? 0,
             CarId = expense?.CarId ?? 0,
-            CategoryOptions = categoryRepository.GetAll()
+            CategoryOptions = (await categoryRepository.GetAllAsync())
                 .OrderBy(category => category.Name)
                 .Select(category => new SelectListItem(category.Name, category.Id.ToString()))
                 .ToList(),
-            CarOptions = carRepository.GetAll()
+            CarOptions = (await carRepository.GetAllAsync())
                 .OrderBy(car => car.Brand)
                 .ThenBy(car => car.Model)
                 .Select(car => new SelectListItem($"{car.Brand} {car.Model} ({car.Year})", car.Id.ToString()))
@@ -140,13 +140,13 @@ public class ExpensesController(IExpenseRepository repository, IExpenseCategoryR
         };
     }
 
-    private ExpenseFormViewModel BuildFormModel(ExpenseFormViewModel formModel)
+    private async Task<ExpenseFormViewModel> BuildFormModel(ExpenseFormViewModel formModel)
     {
-        formModel.CategoryOptions = categoryRepository.GetAll()
+        formModel.CategoryOptions = (await categoryRepository.GetAllAsync())
             .OrderBy(category => category.Name)
             .Select(category => new SelectListItem(category.Name, category.Id.ToString()))
             .ToList();
-        formModel.CarOptions = carRepository.GetAll()
+        formModel.CarOptions = (await carRepository.GetAllAsync())
             .OrderBy(car => car.Brand)
             .ThenBy(car => car.Model)
             .Select(car => new SelectListItem($"{car.Brand} {car.Model} ({car.Year})", car.Id.ToString()))

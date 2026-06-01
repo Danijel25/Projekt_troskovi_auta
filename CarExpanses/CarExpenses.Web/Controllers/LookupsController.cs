@@ -15,7 +15,7 @@ public class LookupsController(
     IExpenseCategoryRepository expenseCategoryRepository) : Controller
 {
     [HttpGet("{source}")]
-    public IActionResult Search(string source, string? query, int limit = 25)
+    public async Task<IActionResult> Search(string source, string? query, int limit = 25)
     {
         var max = Math.Clamp(limit, 1, 50);
         var term = query?.Trim();
@@ -28,19 +28,19 @@ public class LookupsController(
 
         var results = normalized switch
         {
-            "users" => GetUsers(term, max),
-            "cars" => GetCars(term, max),
-            "tires" => GetTires(term, max),
-            "categories" => GetCategories(term, max),
+            "users" => await GetUsers(term, max),
+            "cars" => await GetCars(term, max),
+            "tires" => await GetTires(term, max),
+            "categories" => await GetCategories(term, max),
             _ => []
         };
 
         return Json(results);
     }
 
-    private List<LookupItemViewModel> GetUsers(string? term, int limit)
+    private async Task<List<LookupItemViewModel>> GetUsers(string? term, int limit)
     {
-        return userRepository.Query(new UserFilter { Search = term })
+        return (await userRepository.GetListAsync(new UserFilter { Search = term }))
             .OrderBy(user => user.UserName)
             .Take(limit)
             .Select(user => new LookupItemViewModel
@@ -52,9 +52,9 @@ public class LookupsController(
             .ToList();
     }
 
-    private List<LookupItemViewModel> GetCars(string? term, int limit)
+    private async Task<List<LookupItemViewModel>> GetCars(string? term, int limit)
     {
-        return carRepository.Query(new CarFilter { Search = term })
+        return (await carRepository.GetListAsync(new CarFilter { Search = term }))
             .OrderBy(car => car.Brand)
             .ThenBy(car => car.Model)
             .Take(limit)
@@ -67,9 +67,9 @@ public class LookupsController(
             .ToList();
     }
 
-    private List<LookupItemViewModel> GetTires(string? term, int limit)
+    private async Task<List<LookupItemViewModel>> GetTires(string? term, int limit)
     {
-        return tireRepository.Query(new TireFilter { Search = term })
+        return (await tireRepository.GetListAsync(new TireFilter { Search = term }))
             .OrderBy(tire => tire.Brand)
             .ThenBy(tire => tire.Model)
             .Take(limit)
@@ -82,9 +82,9 @@ public class LookupsController(
             .ToList();
     }
 
-    private List<LookupItemViewModel> GetCategories(string? term, int limit)
+    private async Task<List<LookupItemViewModel>> GetCategories(string? term, int limit)
     {
-        return expenseCategoryRepository.Query(new ExpenseCategoryFilter { Search = term })
+        return (await expenseCategoryRepository.GetListAsync(new ExpenseCategoryFilter { Search = term }))
             .OrderBy(category => category.Name)
             .Take(limit)
             .Select(category => new LookupItemViewModel

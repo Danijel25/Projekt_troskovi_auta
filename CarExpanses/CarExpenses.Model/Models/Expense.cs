@@ -12,8 +12,8 @@ public class Expense : ISoftDeleate
     public decimal Amount { get; set; }
     public DateTime Date { get; set; }
     [ForeignKey("ExpenseCategory")]
-    public int CategoryId { get; set; }
-    public required virtual ExpenseCategory Category { get; set; }
+    public required int CategoryId { get; set; }
+    public virtual ExpenseCategory? Category { get; set; }
     [ForeignKey("Car")]
     public int CarId { get; set; }
     public virtual Car Car { get; set; } = null!;

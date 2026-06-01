@@ -5,7 +5,7 @@ namespace CarExpenses.DAL.Repositories;
 
 public sealed class ExpenseCategoryRepository(CarExpesesDbContext dbContext) : IExpenseCategoryRepository
 {
-    public IQueryable<ExpenseCategory> Query(ExpenseCategoryFilter filter)
+    public async Task<IReadOnlyList<ExpenseCategory>> GetListAsync(ExpenseCategoryFilter filter)
     {
         var query = dbContext.ExpenseCategories
             .Include(category => category.Expenses)
@@ -21,40 +21,42 @@ public sealed class ExpenseCategoryRepository(CarExpesesDbContext dbContext) : I
                 || (hasId && category.Id == idValue));
         }
 
-        return query.OrderBy(category => category.Id);
+        return await query.OrderBy(category => category.Id)
+                            .ToListAsync();
     }
 
-    public IReadOnlyList<ExpenseCategory> GetAll() => Query(new ExpenseCategoryFilter()).ToList();
+    public async Task<IReadOnlyList<ExpenseCategory>> GetAllAsync() => await GetListAsync(new ExpenseCategoryFilter());
 
-    public ExpenseCategory? GetById(int id) => dbContext.ExpenseCategories
+    public async Task<ExpenseCategory?> GetByIdAsync(int id) => await dbContext.ExpenseCategories
         .Include(category => category.Expenses)
         .AsNoTracking()
-        .FirstOrDefault(category => category.Id == id);
+        .FirstOrDefaultAsync(category => category.Id == id);
 
-    public void Add(ExpenseCategory category)
+    public async Task<int> AddAsync(ExpenseCategory category)
     {
-        dbContext.ExpenseCategories.Add(category);
-        dbContext.SaveChanges();
+        await dbContext.ExpenseCategories.AddAsync(category);
+        await dbContext.SaveChangesAsync();
+        return category.Id;
     }
 
-    public bool Update(ExpenseCategory category)
+    public async Task<bool> UpdateAsync(ExpenseCategory category)
     {
-        var existing = dbContext.ExpenseCategories.FirstOrDefault(item => item.Id == category.Id);
+        var existing = await dbContext.ExpenseCategories.FirstOrDefaultAsync(item => item.Id == category.Id);
         if (existing is null)
         {
             return false;
         }
 
         existing.Name = category.Name;
-        dbContext.SaveChanges();
+        await dbContext.SaveChangesAsync();
         return true;
     }
 
-    public bool Delete(int id)
+    public async Task<bool> DeleteAsync(int id)
     {
-        var category = dbContext.ExpenseCategories
+        var category = await dbContext.ExpenseCategories
             .Include(item => item.Expenses)
-            .FirstOrDefault(item => item.Id == id);
+            .FirstOrDefaultAsync(item => item.Id == id);
 
         if (category is null)
         {
@@ -62,7 +64,7 @@ public sealed class ExpenseCategoryRepository(CarExpesesDbContext dbContext) : I
         }
 
         dbContext.ExpenseCategories.Remove(category);
-        dbContext.SaveChanges();
+        await dbContext.SaveChangesAsync();
         return true;
     }
 }

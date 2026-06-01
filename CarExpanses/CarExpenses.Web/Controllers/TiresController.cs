@@ -11,20 +11,20 @@ namespace CarExpenses.Web.Controllers;
 public class TiresController(ITireRepository repository) : Controller
 {
     [Route("[action]")]
-    public IActionResult Index() => View(repository.GetAll());
+    public async Task<IActionResult> Index() => View(await repository.GetAllAsync());
 
     [HttpGet]
     [Route("pretraga")]
-    public IActionResult Search(string? query)
+    public async Task<IActionResult> Search(string? query)
     {
-        var tires = repository.Query(new TireFilter { Search = query }).ToList();
+        var tires = await repository.GetListAsync(new TireFilter { Search = query });
         return PartialView("_TireList", tires);
     }
 
     [Route("detalji/{id}")]
-    public IActionResult Details(int id)
+    public async Task<IActionResult> Details(int id)
     {
-        var tire = repository.GetById(id);
+        var tire = await repository.GetByIdAsync(id);
         return tire is null ? NotFound() : View(tire);
     }
 
@@ -35,14 +35,14 @@ public class TiresController(ITireRepository repository) : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Route("novi")]
-    public IActionResult Create(TireFormViewModel formModel)
+    public async Task<IActionResult> Create(TireFormViewModel formModel)
     {
         if (!ModelState.IsValid)
         {
             return View("Form", formModel);
         }
 
-        repository.Add(new Tire
+        await repository.AddAsync(new Tire
         {
             Brand = formModel.Brand,
             Model = formModel.Model,
@@ -54,9 +54,9 @@ public class TiresController(ITireRepository repository) : Controller
 
     [HttpGet]
     [Route("uredi/{id}")]
-    public IActionResult Edit(int id)
+    public async Task<IActionResult> Edit(int id)
     {
-        var tire = repository.GetById(id);
+        var tire = await repository.GetByIdAsync(id);
         return tire is null ? NotFound() : View("Form", new TireFormViewModel
         {
             Id = tire.Id,
@@ -70,7 +70,7 @@ public class TiresController(ITireRepository repository) : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Route("uredi/{id}")]
-    public IActionResult Edit(int id, TireFormViewModel formModel)
+    public async Task<IActionResult> Edit(int id, TireFormViewModel formModel)
     {
         if (id != formModel.Id)
         {
@@ -91,7 +91,7 @@ public class TiresController(ITireRepository repository) : Controller
             Price = formModel.Price
         };
 
-        if (!repository.Update(tire))
+        if (!await repository.UpdateAsync(tire))
         {
             return NotFound();
         }
@@ -100,18 +100,18 @@ public class TiresController(ITireRepository repository) : Controller
 
     [HttpGet]
     [Route("obrisi/{id}")]
-    public IActionResult Delete(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        var tire = repository.GetById(id);
+        var tire = await repository.GetByIdAsync(id);
         return tire is null ? NotFound() : View(tire);
     }
 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     [Route("obrisi/{id}")]
-    public IActionResult DeleteConfirmed(int id)
+    public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        if (!repository.Delete(id))
+        if (!await repository.DeleteAsync(id))
         {
             return NotFound();
         }

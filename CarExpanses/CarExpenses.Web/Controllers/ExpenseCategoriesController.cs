@@ -10,18 +10,18 @@ namespace CarExpenses.Web.Controllers;
 [Authorize]
 public class ExpenseCategoriesController(IExpenseCategoryRepository repository, Serilog.ILogger logger) : Controller
 {
-	public IActionResult Index() => View(repository.GetAll());
+	public async Task<IActionResult> Index() => View(await repository.GetAllAsync());
 
 	[HttpGet]
-	public IActionResult Search(string? query)
+	public async Task<IActionResult> Search(string? query)
 	{
-		var categories = repository.Query(new ExpenseCategoryFilter { Search = query }).ToList();
+		var categories = await repository.GetListAsync(new ExpenseCategoryFilter { Search = query });
 		return PartialView("_ExpenseCategoryList", categories);
 	}
 
-	public IActionResult Details(int id)
+	public async Task<IActionResult> Details(int id)
 	{
-		var category = repository.GetById(id);
+		var category = await repository.GetByIdAsync(id);
 		return category is null ? NotFound() : View(category);
 	}
 
@@ -32,7 +32,7 @@ public class ExpenseCategoriesController(IExpenseCategoryRepository repository, 
 	[Authorize(Roles = AppRoles.Admin)]
 	[HttpPost]
 	[ValidateAntiForgeryToken]
-	public IActionResult Create(ExpenseCategoryFormViewModel formModel)
+	public async Task<IActionResult> Create(ExpenseCategoryFormViewModel formModel)
 	{
 		logger.Information("Attempting to create expense category {CategoryName}", formModel.Name);
 		logger.Debug("Received form data: {@FormModel}", formModel);
@@ -43,7 +43,7 @@ public class ExpenseCategoriesController(IExpenseCategoryRepository repository, 
 				return View("Form", formModel);
 			}	
 
-			repository.Add(new ExpenseCategory { Name = formModel.Name });
+			await repository.AddAsync(new ExpenseCategory { Name = formModel.Name });
 			return RedirectToAction(nameof(Index));
 		} 
 		catch(Exception ex)
@@ -56,9 +56,9 @@ public class ExpenseCategoriesController(IExpenseCategoryRepository repository, 
 
 	[Authorize(Roles = AppRoles.Admin)]
 	[HttpGet]
-	public IActionResult Edit(int id)
+	public async Task<IActionResult> Edit(int id)
 	{
-		var category = repository.GetById(id);
+		var category = await repository.GetByIdAsync(id);
 		return category is null ? NotFound() : View("Form", new ExpenseCategoryFormViewModel
 		{
 			Id = category.Id,
@@ -69,7 +69,7 @@ public class ExpenseCategoriesController(IExpenseCategoryRepository repository, 
 	[Authorize(Roles = AppRoles.Admin)]
 	[HttpPost]
 	[ValidateAntiForgeryToken]
-	public IActionResult Edit(int id, ExpenseCategoryFormViewModel formModel)
+	public async Task<IActionResult> Edit(int id, ExpenseCategoryFormViewModel formModel)
 	{
 		if (id != formModel.Id)
 		{
@@ -87,7 +87,7 @@ public class ExpenseCategoriesController(IExpenseCategoryRepository repository, 
 			Name = formModel.Name
 		};
 
-		if (!repository.Update(category))
+		if (!await repository.UpdateAsync(category))
 		{
 			return NotFound();
 		}
@@ -96,18 +96,18 @@ public class ExpenseCategoriesController(IExpenseCategoryRepository repository, 
 
 	[Authorize(Roles = AppRoles.Admin)]
 	[HttpGet]
-	public IActionResult Delete(int id)
+	public async Task<IActionResult> Delete(int id)
 	{
-		var category = repository.GetById(id);
+		var category = await repository.GetByIdAsync(id);
 		return category is null ? NotFound() : View(category);
 	}
 
 	[Authorize(Roles = AppRoles.Admin)]
 	[HttpPost, ActionName("Delete")]
 	[ValidateAntiForgeryToken]
-	public IActionResult DeleteConfirmed(int id)
+	public async Task<IActionResult> DeleteConfirmed(int id)
 	{
-		if (!repository.Delete(id))
+		if (!await repository.DeleteAsync(id))
 		{
 			return NotFound();
 		}

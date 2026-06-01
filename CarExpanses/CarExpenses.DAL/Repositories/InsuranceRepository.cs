@@ -6,7 +6,7 @@ namespace CarExpenses.DAL.Repositories;
 
 public sealed class InsuranceRepository(CarExpesesDbContext dbContext) : IInsuranceRepository
 {
-    public IQueryable<Insurance> Query(InsuranceFilter filter)
+    public async Task<IReadOnlyList<Insurance>> GetListAsync(InsuranceFilter filter)
     {
         var query = dbContext.Insurances
             .Include(insurance => insurance.Car)
@@ -45,25 +45,26 @@ public sealed class InsuranceRepository(CarExpesesDbContext dbContext) : IInsura
                 || (item.Car != null && (item.Car.Brand.Contains(term) || item.Car.Model.Contains(term))));
         }
 
-        return query.OrderByDescending(item => item.StartDate);
+        return await query.OrderByDescending(item => item.StartDate).ToListAsync();
     }
 
-    public IReadOnlyList<Insurance> GetAll() => Query(new InsuranceFilter()).ToList();
+    public Task<IReadOnlyList<Insurance>> GetAllAsync() => GetListAsync(new InsuranceFilter());
 
-    public Insurance? GetById(int id) => dbContext.Insurances
+    public async Task<Insurance?> GetByIdAsync(int id) => await dbContext.Insurances
         .Include(insurance => insurance.Car)
         .AsNoTracking()
-        .FirstOrDefault(insurance => insurance.Id == id);
+        .FirstOrDefaultAsync(insurance => insurance.Id == id);
 
-    public void Add(Insurance insurance)
+    public async Task<int> AddAsync(Insurance insurance)
     {
-        dbContext.Insurances.Add(insurance);
-        dbContext.SaveChanges();
+        await dbContext.Insurances.AddAsync(insurance);
+        await dbContext.SaveChangesAsync();
+        return insurance.Id;
     }
 
-    public bool Update(Insurance insurance)
+    public async Task<bool>  UpdateAsync(Insurance insurance)
     {
-        var existing = dbContext.Insurances.FirstOrDefault(item => item.Id == insurance.Id);
+        var existing = await dbContext.Insurances.FirstOrDefaultAsync(item => item.Id == insurance.Id);
         if (existing is null)
         {
             return false;
@@ -76,20 +77,20 @@ public sealed class InsuranceRepository(CarExpesesDbContext dbContext) : IInsura
         existing.EndDate = insurance.EndDate;
         existing.CarId = insurance.CarId;
 
-        dbContext.SaveChanges();
+        await dbContext.SaveChangesAsync();
         return true;
     }
 
-    public bool Delete(int id)
+    public async Task<bool> DeleteAsync(int id)
     {
-        var insurance = dbContext.Insurances.FirstOrDefault(item => item.Id == id);
+        var insurance = await dbContext.Insurances.FirstOrDefaultAsync(item => item.Id == id);
         if (insurance is null)
         {
             return false;
         }
 
         dbContext.Insurances.Remove(insurance);
-        dbContext.SaveChanges();
+        await dbContext.SaveChangesAsync();
         return true;
     }
 }

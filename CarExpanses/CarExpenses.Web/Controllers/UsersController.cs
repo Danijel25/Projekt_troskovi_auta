@@ -13,14 +13,14 @@ public class UsersController(UserManager<User> userManager, IUserRepository user
 {
     public async Task<IActionResult> Index()
     {
-        var users = await userRepository.Query(new UserFilter()).ToListAsync();
+        var users = await userRepository.GetListAsync(new UserFilter());
         return View(users);
     }
 
     [HttpGet]
     public async Task<IActionResult> Search(string? query)
     {
-        var users = await userRepository.Query(new UserFilter { Search = query }).ToListAsync();
+        var users = await userRepository.GetListAsync(new UserFilter { Search = query });
         return PartialView("_UserList", users);
     }
 

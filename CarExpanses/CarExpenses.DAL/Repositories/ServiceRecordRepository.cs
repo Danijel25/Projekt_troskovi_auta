@@ -6,7 +6,7 @@ namespace CarExpenses.DAL.Repositories;
 
 public sealed class ServiceRecordRepository(CarExpesesDbContext dbContext) : IServiceRecordRepository
 {
-    public IQueryable<ServiceRecord> Query(ServiceRecordFilter filter)
+    public async Task<IReadOnlyList<ServiceRecord>> GetListAsync(ServiceRecordFilter filter)
     {
         var query = dbContext.ServiceRecords
             .Include(serviceRecord => serviceRecord.Car)
@@ -45,25 +45,26 @@ public sealed class ServiceRecordRepository(CarExpesesDbContext dbContext) : ISe
                 || (item.Car != null && (item.Car.Brand.Contains(term) || item.Car.Model.Contains(term))));
         }
 
-        return query.OrderByDescending(item => item.ServiceDate);
+        return await query.OrderByDescending(item => item.ServiceDate).ToListAsync();
     }
 
-    public IReadOnlyList<ServiceRecord> GetAll() => Query(new ServiceRecordFilter()).ToList();
+    public async Task<IReadOnlyList<ServiceRecord>> GetAllAsync() => await GetListAsync(new ServiceRecordFilter());
 
-    public ServiceRecord? GetById(int id) => dbContext.ServiceRecords
+    public async Task<ServiceRecord?> GetByIdAsync(int id) => await dbContext.ServiceRecords
         .Include(serviceRecord => serviceRecord.Car)
         .AsNoTracking()
-        .FirstOrDefault(serviceRecord => serviceRecord.Id == id);
+        .FirstOrDefaultAsync(serviceRecord => serviceRecord.Id == id);
 
-    public void Add(ServiceRecord serviceRecord)
+    public async Task<int> AddAsync(ServiceRecord serviceRecord)
     {
-        dbContext.ServiceRecords.Add(serviceRecord);
-        dbContext.SaveChanges();
+        await dbContext.ServiceRecords.AddAsync(serviceRecord);
+        await dbContext.SaveChangesAsync();
+        return serviceRecord.Id;
     }
 
-    public bool Update(ServiceRecord serviceRecord)
+    public async Task<bool> UpdateAsync(ServiceRecord serviceRecord)
     {
-        var existing = dbContext.ServiceRecords.FirstOrDefault(item => item.Id == serviceRecord.Id);
+        var existing = await dbContext.ServiceRecords.FirstOrDefaultAsync(item => item.Id == serviceRecord.Id);
         if (existing is null)
         {
             return false;
@@ -76,20 +77,20 @@ public sealed class ServiceRecordRepository(CarExpesesDbContext dbContext) : ISe
         existing.Mileage = serviceRecord.Mileage;
         existing.CarId = serviceRecord.CarId;
 
-        dbContext.SaveChanges();
+        await dbContext.SaveChangesAsync();
         return true;
     }
 
-    public bool Delete(int id)
+    public async Task<bool> DeleteAsync(int id)
     {
-        var serviceRecord = dbContext.ServiceRecords.FirstOrDefault(item => item.Id == id);
+        var serviceRecord = await dbContext.ServiceRecords.FirstOrDefaultAsync(item => item.Id == id);
         if (serviceRecord is null)
         {
             return false;
         }
 
         dbContext.ServiceRecords.Remove(serviceRecord);
-        dbContext.SaveChanges();
+        await dbContext.SaveChangesAsync();
         return true;
     }
 }

@@ -15,24 +15,23 @@ namespace CarExpenses.Web.Controllers;
 public class CarsController(ICarRepository carRepository, UserManager<User> userManager, ICurrentUserService currentUserService) : Controller
 {
     [Route("svi")]
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        var cars = carRepository.GetAll();
-        return View(cars);
+        return View(await carRepository.GetAllAsync());
     }
 
     [HttpGet]
     [Route("pretraga")]
-    public IActionResult Search(string? query)
+    public async Task<IActionResult> Search(string? query)
     {
-        var cars = carRepository.Query(new CarFilter { Search = query }).ToList();
+        var cars = await carRepository.GetListAsync(new CarFilter { Search = query });
         return PartialView("_CarList", cars);
     }
 
     [Route("detalji/{id}")]
-    public IActionResult Details(int id)
+    public async Task<IActionResult> Details(int id)
     {
-        var car = carRepository.GetById(id);
+        var car = await carRepository.GetByIdAsync(id);
 
         if (car is null)
         {
@@ -52,7 +51,7 @@ public class CarsController(ICarRepository carRepository, UserManager<User> user
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Route("novi")]
-    public IActionResult Create(CarFormViewModel formModel)
+    public async Task<IActionResult> Create(CarFormViewModel formModel)
     {
         if (!User.IsInRole(AppRoles.Admin))
         {
@@ -89,16 +88,16 @@ public class CarsController(ICarRepository carRepository, UserManager<User> user
             FuelType = formModel.FuelType
         };
 
-        carRepository.Add(car);
+        await carRepository.AddAsync(car);
 
         return RedirectToAction(nameof(Index));
     }
 
     [HttpGet]
     [Route("uredi/{id}")]
-    public IActionResult Edit(int id)
+    public async Task<IActionResult> Edit(int id)
     {
-        var car = carRepository.GetById(id);
+        var car = await carRepository.GetByIdAsync(id);
 
         if (car is null)
         {
@@ -111,7 +110,7 @@ public class CarsController(ICarRepository carRepository, UserManager<User> user
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Route("uredi/{id}")]
-    public IActionResult Edit(int id, CarFormViewModel formModel)
+    public async Task<IActionResult> Edit(int id, CarFormViewModel formModel)
     {
         if (id != formModel.Id)
         {
@@ -154,7 +153,7 @@ public class CarsController(ICarRepository carRepository, UserManager<User> user
             FuelType = formModel.FuelType
         };
 
-        if (!carRepository.Update(car))
+        if (!await carRepository.UpdateAsync(car))
         {
             return NotFound();
         }
@@ -164,9 +163,9 @@ public class CarsController(ICarRepository carRepository, UserManager<User> user
 
     [HttpGet]
     [Route("obrisi/{id}")]
-    public IActionResult Delete(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        var car = carRepository.GetById(id);
+        var car = await carRepository.GetByIdAsync(id);
 
         if (car is null)
         {
@@ -179,9 +178,9 @@ public class CarsController(ICarRepository carRepository, UserManager<User> user
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     [Route("obrisi/{id}")]
-    public IActionResult DeleteConfirmed(int id)
+    public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        if (!carRepository.Delete(id))
+        if (!await carRepository.DeleteAsync(id))
         {
             return NotFound();
         }

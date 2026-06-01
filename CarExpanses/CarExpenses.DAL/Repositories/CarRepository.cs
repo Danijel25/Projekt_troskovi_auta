@@ -7,7 +7,7 @@ namespace CarExpenses.DAL.Repositories;
 
 public sealed class CarRepository(CarExpesesDbContext dbContext) : ICarRepository
 {
-    public IQueryable<Car> Query(CarFilter filter)
+    public async Task<IReadOnlyList<Car>> GetListAsync(CarFilter filter)
     {
         var query = dbContext.Cars
             .Include(car => car.Expenses)
@@ -49,12 +49,13 @@ public sealed class CarRepository(CarExpesesDbContext dbContext) : ICarRepositor
                 || (hasEngine && car.EngineVolume == engineValue));
         }
 
-        return query.OrderBy(car => car.Id);
+        return await query.OrderBy(car => car.Id)
+            .ToListAsync();
     }
 
-    public IReadOnlyList<Car> GetAll() => Query(new CarFilter()).ToList();
+    public async Task<IReadOnlyList<Car>> GetAllAsync() => await GetListAsync(new CarFilter());
 
-    public Car? GetById(int id) => dbContext.Cars
+    public async Task<Car?> GetByIdAsync(int id) => await dbContext.Cars
         .Include(car => car.FuelExpenses)
         .Include(car => car.ServiceRecords)
         .Include(car => car.Insurances)
@@ -63,17 +64,18 @@ public sealed class CarRepository(CarExpesesDbContext dbContext) : ICarRepositor
         .Include(car => car.Expenses!)
             .ThenInclude(expense => expense.Category)
         .AsNoTracking()
-        .FirstOrDefault(car => car.Id == id);
+        .FirstOrDefaultAsync(car => car.Id == id);
 
-    public void Add(Car car)
+    public async Task<int> AddAsync(Car car)
     {
-        dbContext.Cars.Add(car);
-        dbContext.SaveChanges();
+        await dbContext.Cars.AddAsync(car);
+        await dbContext.SaveChangesAsync();
+        return car.Id;
     }
 
-    public bool Update(Car car)
+    public async Task<bool> UpdateAsync(Car car)
     {
-        var existing = dbContext.Cars.FirstOrDefault(item => item.Id == car.Id);
+        var existing = await dbContext.Cars.FirstOrDefaultAsync(item => item.Id == car.Id);
         if (existing is null)
         {
             return false;
@@ -89,13 +91,13 @@ public sealed class CarRepository(CarExpesesDbContext dbContext) : ICarRepositor
         existing.PurchaseDate = car.PurchaseDate;
         existing.FuelType = car.FuelType;
 
-        dbContext.SaveChanges();
+        await dbContext.SaveChangesAsync();
         return true;
     }
 
-    public bool Delete(int id)
+    public async Task<bool> DeleteAsync(int id)
     {
-        var car = dbContext.Cars
+        var car = await dbContext.Cars
             .Include(item => item.FuelExpenses)
             .Include(item => item.ServiceRecords)
             .Include(item => item.Insurances)
@@ -104,7 +106,7 @@ public sealed class CarRepository(CarExpesesDbContext dbContext) : ICarRepositor
             .Include(item => item.CarFiles)
             .Include(item => item.Expenses!)
                 .ThenInclude(expense => expense.Category)
-            .FirstOrDefault(item => item.Id == id);
+            .FirstOrDefaultAsync(item => item.Id == id);
 
         if (car is null)
         {
@@ -112,7 +114,7 @@ public sealed class CarRepository(CarExpesesDbContext dbContext) : ICarRepositor
         }
 
         dbContext.Cars.Remove(car);
-        dbContext.SaveChanges();
+        await dbContext.SaveChangesAsync();
         return true;
     }
 }

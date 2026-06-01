@@ -25,20 +25,10 @@ public sealed class TiresApiController : ControllerBase
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<TireSummaryDto>>> GetAll(
-        [FromQuery] string? search,
-        [FromQuery] string? season,
-        [FromQuery] decimal? minPrice,
-        [FromQuery] decimal? maxPrice)
+        [FromQuery] TireFilter filter)
     {
         var tires = await tireRepository
-            .Query(new TireFilter
-            {
-                Search = search,
-                Season = season,
-                MinPrice = minPrice,
-                MaxPrice = maxPrice
-            })
-            .ToListAsync();
+            .GetListAsync(filter);
         var result = tires.Select(DtoMapping.ToSummaryDto).ToList();
         return Ok(result);
     }
@@ -46,11 +36,7 @@ public sealed class TiresApiController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<ActionResult<TireDetailDto>> GetById(int id)
     {
-        var tire = await dbContext.Tires
-            .Include(item => item.CarTires)!
-                .ThenInclude(carTire => carTire.Car)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(item => item.Id == id);
+        var tire = await tireRepository .GetByIdAsync(id);
 
         if (tire is null)
         {
@@ -71,14 +57,9 @@ public sealed class TiresApiController : ControllerBase
             Price = dto.Price
         };
 
-        dbContext.Tires.Add(tire);
-        await dbContext.SaveChangesAsync();
+        var tireId = await tireRepository.AddAsync(tire);
 
-        var created = await dbContext.Tires
-            .Include(item => item.CarTires)!
-                .ThenInclude(carTire => carTire.Car)
-            .AsNoTracking()
-            .FirstAsync(item => item.Id == tire.Id);
+        var created = await tireRepository.GetByIdAsync(tireId);
 
         return CreatedAtAction(nameof(GetById), new { id = tire.Id }, DtoMapping.ToDetailDto(created));
     }
@@ -86,35 +67,35 @@ public sealed class TiresApiController : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, TireUpdateDto dto)
     {
-        var tire = await dbContext.Tires.FirstOrDefaultAsync(item => item.Id == id);
+        var tire = await tireRepository.GetByIdAsync(id);
         if (tire is null)
         {
             return NotFound();
         }
 
-        tire.Brand = dto.Brand;
-        tire.Model = dto.Model;
-        tire.Season = dto.Season;
-        tire.Price = dto.Price;
-        dbContext.Tires.Update(tire);
-        await dbContext.SaveChangesAsync();
+        await tireRepository.UpdateAsync(new()
+        {
+            Id = id,
+            Brand = dto.Brand,
+            Model = dto.Model,
+            Season = dto.Season,
+            Price = dto.Price
+        });
+
         return NoContent();
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var tire = await dbContext.Tires
-            .Include(item => item.CarTires)
-            .FirstOrDefaultAsync(item => item.Id == id);
+        var tire = await tireRepository.GetByIdAsync(id);
 
         if (tire is null)
         {
             return NotFound();
         }
 
-        dbContext.Tires.Remove(tire);
-        await dbContext.SaveChangesAsync();
+        await tireRepository.DeleteAsync(id);
         return NoContent();
     }
 }

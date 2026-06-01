@@ -10,40 +10,40 @@ namespace CarExpenses.Web.Controllers;
 [Authorize]
 public class InsurancesController(IInsuranceRepository repository, ICarRepository carRepository) : Controller
 {
-    public IActionResult Index() => View(repository.GetAll());
+    public async Task<IActionResult> Index() => View(await repository.GetAllAsync());
 
     [HttpGet]
-    public IActionResult Search(string? query)
+    public async Task<IActionResult> Search(string? query)
     {
-        var insurances = repository.Query(new InsuranceFilter { Search = query }).ToList();
+        var insurances = await repository.GetListAsync(new InsuranceFilter { Search = query });
         return PartialView("_InsuranceList", insurances);
     }
 
-    public IActionResult Details(int id)
+    public async Task<IActionResult> Details(int id)
     {
-        var insurance = repository.GetById(id);
+        var insurance = await repository.GetByIdAsync(id);
         return insurance is null ? NotFound() : View(insurance);
     }
 
     [HttpGet]
-    public IActionResult Create() => View("Form", BuildFormModel());
+    public async Task<IActionResult> Create() => View("Form", await BuildFormModel());
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Create(InsuranceFormViewModel formModel)
+    public async Task<IActionResult> Create(InsuranceFormViewModel formModel)
     {
         if (!ModelState.IsValid)
         {
             return View("Form", BuildFormModel(formModel));
         }
 
-        if (carRepository.GetById(formModel.CarId) is null)
+        if (await carRepository.GetByIdAsync(formModel.CarId) is null)
         {
             ModelState.AddModelError(nameof(formModel.CarId), "Car not found.");
             return View("Form", BuildFormModel(formModel));
         }
 
-        repository.Add(new Insurance
+        await repository.AddAsync(new Insurance
         {
             Company = formModel.Company,
             InsuranceType = formModel.InsuranceType,
@@ -56,15 +56,15 @@ public class InsurancesController(IInsuranceRepository repository, ICarRepositor
     }
 
     [HttpGet]
-    public IActionResult Edit(int id)
+    public async Task<IActionResult> Edit(int id)
     {
-        var insurance = repository.GetById(id);
-        return insurance is null ? NotFound() : View("Form", BuildFormModel(insurance));
+        var insurance = await repository.GetByIdAsync(id);
+        return insurance is null ? NotFound() : View("Form", await BuildFormModel(insurance));
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Edit(int id, InsuranceFormViewModel formModel)
+    public async Task<IActionResult> Edit(int id, InsuranceFormViewModel formModel)
     {
         if (id != formModel.Id)
         {
@@ -76,7 +76,7 @@ public class InsurancesController(IInsuranceRepository repository, ICarRepositor
             return View("Form", BuildFormModel(formModel));
         }
 
-        if (carRepository.GetById(formModel.CarId) is null)
+        if (await carRepository.GetByIdAsync(formModel.CarId) is null)
         {
             ModelState.AddModelError(nameof(formModel.CarId), "Car not found.");
             return View("Form", BuildFormModel(formModel));
@@ -93,7 +93,7 @@ public class InsurancesController(IInsuranceRepository repository, ICarRepositor
             CarId = formModel.CarId
         };
 
-        if (!repository.Update(insurance))
+        if (!await repository.UpdateAsync(insurance))
         {
             return NotFound();
         }
@@ -101,24 +101,24 @@ public class InsurancesController(IInsuranceRepository repository, ICarRepositor
     }
 
     [HttpGet]
-    public IActionResult Delete(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        var insurance = repository.GetById(id);
+        var insurance = await repository.GetByIdAsync(id);
         return insurance is null ? NotFound() : View(insurance);
     }
 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public IActionResult DeleteConfirmed(int id)
+    public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        if (!repository.Delete(id))
+        if (!await repository.DeleteAsync(id))
         {
             return NotFound();
         }
         return RedirectToAction(nameof(Index));
     }
 
-    private InsuranceFormViewModel BuildFormModel(Insurance? insurance = null)
+    private async Task<InsuranceFormViewModel> BuildFormModel(Insurance? insurance = null)
     {
         return new InsuranceFormViewModel
         {
@@ -129,7 +129,7 @@ public class InsurancesController(IInsuranceRepository repository, ICarRepositor
             StartDate = insurance?.StartDate ?? DateTime.Today,
             EndDate = insurance?.EndDate ?? DateTime.Today,
             CarId = insurance?.CarId ?? 0,
-            CarOptions = carRepository.GetAll()
+            CarOptions = (await carRepository.GetAllAsync())
                 .OrderBy(car => car.Brand)
                 .ThenBy(car => car.Model)
                 .Select(car => new SelectListItem($"{car.Brand} {car.Model} ({car.Year})", car.Id.ToString()))
@@ -137,9 +137,9 @@ public class InsurancesController(IInsuranceRepository repository, ICarRepositor
         };
     }
 
-    private InsuranceFormViewModel BuildFormModel(InsuranceFormViewModel formModel)
+    private async Task<InsuranceFormViewModel> BuildFormModel(InsuranceFormViewModel formModel)
     {
-        formModel.CarOptions = carRepository.GetAll()
+        formModel.CarOptions = (await carRepository.GetAllAsync())
             .OrderBy(car => car.Brand)
             .ThenBy(car => car.Model)
             .Select(car => new SelectListItem($"{car.Brand} {car.Model} ({car.Year})", car.Id.ToString()))

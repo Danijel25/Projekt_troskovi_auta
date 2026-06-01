@@ -25,20 +25,10 @@ public sealed class InsurancesApiController : ControllerBase
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<InsuranceDto>>> GetAll(
-        [FromQuery] string? search,
-        [FromQuery] int? carId,
-        [FromQuery] DateTime? fromDate,
-        [FromQuery] DateTime? toDate)
+        [FromQuery] InsuranceFilter filter)
     {
         var insurances = await insuranceRepository
-            .Query(new InsuranceFilter
-            {
-                Search = search,
-                CarId = carId,
-                FromDate = fromDate,
-                ToDate = toDate
-            })
-            .ToListAsync();
+            .GetListAsync(filter);
         var result = insurances.Select(DtoMapping.ToDto).ToList();
         return Ok(result);
     }
@@ -46,10 +36,7 @@ public sealed class InsurancesApiController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<ActionResult<InsuranceDto>> GetById(int id)
     {
-        var insurance = await dbContext.Insurances
-            .Include(item => item.Car)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(item => item.Id == id);
+        var insurance = await insuranceRepository.GetByIdAsync(id);
 
         if (insurance is null)
         {
@@ -84,13 +71,9 @@ public sealed class InsurancesApiController : ControllerBase
             CarId = dto.CarId
         };
 
-        dbContext.Insurances.Add(insurance);
-        await dbContext.SaveChangesAsync();
+        var insuranceId = await insuranceRepository.AddAsync(insurance);
 
-        var created = await dbContext.Insurances
-            .Include(item => item.Car)
-            .AsNoTracking()
-            .FirstAsync(item => item.Id == insurance.Id);
+        var created = await insuranceRepository.GetByIdAsync(insuranceId);
 
         return CreatedAtAction(nameof(GetById), new { id = insurance.Id }, DtoMapping.ToDto(created));
     }
@@ -98,7 +81,7 @@ public sealed class InsurancesApiController : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, InsuranceUpdateDto dto)
     {
-        var insurance = await dbContext.Insurances.FirstOrDefaultAsync(item => item.Id == id);
+        var insurance = await insuranceRepository.GetByIdAsync(id);
         if (insurance is null)
         {
             return NotFound();
@@ -116,28 +99,29 @@ public sealed class InsurancesApiController : ControllerBase
             return ValidationProblem(ModelState);
         }
 
-        insurance.Company = dto.Company;
-        insurance.InsuranceType = dto.InsuranceType;
-        insurance.Price = dto.Price;
-        insurance.StartDate = dto.StartDate;
-        insurance.EndDate = dto.EndDate;
-        insurance.CarId = dto.CarId;
-
-        await dbContext.SaveChangesAsync();
+        await insuranceRepository.UpdateAsync(new()
+        {
+            Id = id,
+            Company = dto.Company,
+            InsuranceType = dto.InsuranceType,
+            Price = dto.Price,
+            StartDate = dto.StartDate,
+            EndDate = dto.EndDate,
+            CarId = dto.CarId
+        });
         return NoContent();
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var insurance = await dbContext.Insurances.FirstOrDefaultAsync(item => item.Id == id);
+        var insurance = await insuranceRepository.GetByIdAsync(id);
         if (insurance is null)
         {
             return NotFound();
         }
 
-        dbContext.Insurances.Remove(insurance);
-        await dbContext.SaveChangesAsync();
+        await insuranceRepository.DeleteAsync(id);
         return NoContent();
     }
 }

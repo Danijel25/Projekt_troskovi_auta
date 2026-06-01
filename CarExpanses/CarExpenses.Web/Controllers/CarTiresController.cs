@@ -11,46 +11,46 @@ namespace CarExpenses.Web.Controllers;
 [Route("[controller]/[action]")]
 public class CarTiresController(ICarTireRepository repository, ICarRepository carRepository, ITireRepository tireRepository) : Controller
 {
-    public IActionResult Index() => View(repository.GetAll());
+    public async Task<IActionResult> Index() => View(await repository.GetAllAsync());
 
     [HttpGet]
-    public IActionResult Search(string? query)
+    public async Task<IActionResult> Search(string? query)
     {
-        var assignments = repository.Query(new CarTireFilter { Search = query }).ToList();
+        var assignments = await repository.GetListAsync(new CarTireFilter { Search = query });
         return PartialView("_CarTireList", assignments);
     }
 
-    public IActionResult Details(int id)
+    public async Task<IActionResult> Details(int id)
     {
-        var carTire = repository.GetById(id);
+        var carTire = await repository.GetByIdAsync(id);
         return carTire is null ? NotFound() : View(carTire);
     }
 
     [HttpGet]
-    public IActionResult Create() => View("Form", BuildFormModel());
+    public async Task<IActionResult> Create() => View("Form", await BuildFormModelAsync());
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Create(CarTireFormViewModel formModel)
+    public async Task<IActionResult> Create(CarTireFormViewModel formModel)
     {
         if (!ModelState.IsValid)
         {
-            return View("Form", BuildFormModel(formModel));
+            return View("Form", BuildFormModelAsync(formModel));
         }
 
-        if (carRepository.GetById(formModel.CarId) is null)
+        if (await carRepository.GetByIdAsync(formModel.CarId) is null)
         {
             ModelState.AddModelError(nameof(formModel.CarId), "Car not found.");
-            return View("Form", BuildFormModel(formModel));
+            return View("Form", BuildFormModelAsync(formModel));
         }
 
-        if (tireRepository.GetById(formModel.TireId) is null)
+        if (tireRepository.GetByIdAsync(formModel.TireId) is null)
         {
             ModelState.AddModelError(nameof(formModel.TireId), "Tire not found.");
-            return View("Form", BuildFormModel(formModel));
+            return View("Form", BuildFormModelAsync(formModel));
         }
 
-        repository.Add(new CarTire
+        await repository.AddAsync(new CarTire
         {
             CarId = formModel.CarId,
             TireId = formModel.TireId,
@@ -60,15 +60,15 @@ public class CarTiresController(ICarTireRepository repository, ICarRepository ca
     }
 
     [HttpGet]
-    public IActionResult Edit(int id)
+    public async Task<IActionResult> Edit(int id)
     {
-        var carTire = repository.GetById(id);
-        return carTire is null ? NotFound() : View("Form", BuildFormModel(carTire));
+        var carTire = await repository.GetByIdAsync(id);
+        return carTire is null ? NotFound() : View("Form", await BuildFormModelAsync(carTire));
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Edit(int id, CarTireFormViewModel formModel)
+    public async Task<IActionResult> Edit(int id, CarTireFormViewModel formModel)
     {
         if (id != formModel.Id)
         {
@@ -77,19 +77,19 @@ public class CarTiresController(ICarTireRepository repository, ICarRepository ca
 
         if (!ModelState.IsValid)
         {
-            return View("Form", BuildFormModel(formModel));
+            return View("Form", BuildFormModelAsync(formModel));
         }
 
-        if (carRepository.GetById(formModel.CarId) is null)
+        if (await carRepository.GetByIdAsync(formModel.CarId) is null)
         {
             ModelState.AddModelError(nameof(formModel.CarId), "Car not found.");
-            return View("Form", BuildFormModel(formModel));
+            return View("Form", BuildFormModelAsync(formModel));
         }
 
-        if (tireRepository.GetById(formModel.TireId) is null)
+        if (tireRepository.GetByIdAsync(formModel.TireId) is null)
         {
             ModelState.AddModelError(nameof(formModel.TireId), "Tire not found.");
-            return View("Form", BuildFormModel(formModel));
+            return View("Form", BuildFormModelAsync(formModel));
         }
 
         var carTire = new CarTire
@@ -100,7 +100,7 @@ public class CarTiresController(ICarTireRepository repository, ICarRepository ca
             InstalledDate = formModel.InstalledDate
         };
 
-        if (!repository.Update(carTire))
+        if (!await repository.UpdateAsync(carTire))
         {
             return NotFound();
         }
@@ -108,24 +108,24 @@ public class CarTiresController(ICarTireRepository repository, ICarRepository ca
     }
 
     [HttpGet]
-    public IActionResult Delete(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        var carTire = repository.GetById(id);
+        var carTire = await repository.GetByIdAsync(id);
         return carTire is null ? NotFound() : View(carTire);
     }
 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public IActionResult DeleteConfirmed(int id)
+    public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        if (!repository.Delete(id))
+        if (!await repository.DeleteAsync(id))
         {
             return NotFound();
         }
         return RedirectToAction(nameof(Index));
     }
 
-    private CarTireFormViewModel BuildFormModel(CarTire? carTire = null)
+    private async Task<CarTireFormViewModel> BuildFormModelAsync(CarTire? carTire = null)
     {
         return new CarTireFormViewModel
         {
@@ -133,12 +133,12 @@ public class CarTiresController(ICarTireRepository repository, ICarRepository ca
             CarId = carTire?.CarId ?? 0,
             TireId = carTire?.TireId ?? 0,
             InstalledDate = carTire?.InstalledDate ?? DateTime.Today,
-            CarOptions = carRepository.GetAll()
+            CarOptions = (await carRepository.GetAllAsync())
                 .OrderBy(car => car.Brand)
                 .ThenBy(car => car.Model)
                 .Select(car => new SelectListItem($"{car.Brand} {car.Model} ({car.Year})", car.Id.ToString()))
                 .ToList(),
-            TireOptions = tireRepository.GetAll()
+            TireOptions = (await tireRepository.GetAllAsync())
                 .OrderBy(tire => tire.Brand)
                 .ThenBy(tire => tire.Model)
                 .Select(tire => new SelectListItem($"{tire.Brand} {tire.Model} ({tire.Season})", tire.Id.ToString()))
@@ -146,14 +146,14 @@ public class CarTiresController(ICarTireRepository repository, ICarRepository ca
         };
     }
 
-    private CarTireFormViewModel BuildFormModel(CarTireFormViewModel formModel)
+    private async Task<CarTireFormViewModel> BuildFormModelAsync(CarTireFormViewModel formModel)
     {
-        formModel.CarOptions = carRepository.GetAll()
+        formModel.CarOptions = (await carRepository.GetAllAsync())
             .OrderBy(car => car.Brand)
             .ThenBy(car => car.Model)
             .Select(car => new SelectListItem($"{car.Brand} {car.Model} ({car.Year})", car.Id.ToString()))
             .ToList();
-        formModel.TireOptions = tireRepository.GetAll()
+        formModel.TireOptions = (await tireRepository.GetAllAsync())
             .OrderBy(tire => tire.Brand)
             .ThenBy(tire => tire.Model)
             .Select(tire => new SelectListItem($"{tire.Brand} {tire.Model} ({tire.Season})", tire.Id.ToString()))

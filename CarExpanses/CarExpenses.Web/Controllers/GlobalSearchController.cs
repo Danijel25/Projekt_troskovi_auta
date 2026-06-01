@@ -17,13 +17,13 @@ public class GlobalSearchController(
     IInsuranceRepository insuranceRepository,
     IExpenseCategoryRepository expenseCategoryRepository,
     IExpenseRepository expenseRepository,
-    UserManager<User> userManager) : Controller
+    IUserRepository userRepository) : Controller
 {
     private const int PageLimit = 12;
     private const int ItemLimit = 6;
 
     [HttpGet]
-    public IActionResult Search(string? query)
+    public async Task<IActionResult> Search(string? query)
     {
         var term = query?.Trim();
         var groups = new List<GlobalSearchGroup>();
@@ -33,18 +33,33 @@ public class GlobalSearchController(
 
         if (!string.IsNullOrWhiteSpace(term))
         {
-            AddGroup(groups, "Cars", SearchCars(term));
-            AddGroup(groups, "Tires", SearchTires(term));
-            AddGroup(groups, "Car Tires", SearchCarTires(term));
-            AddGroup(groups, "Fuel Expenses", SearchFuelExpenses(term));
-            AddGroup(groups, "Service Records", SearchServiceRecords(term));
-            AddGroup(groups, "Insurances", SearchInsurances(term));
-            AddGroup(groups, "Expense Categories", SearchCategories(term));
-            AddGroup(groups, "Expenses", SearchExpenses(term));
+            var cars = await SearchCars(term);
+            AddGroup(groups, "Cars", cars);
+
+            var tires = await SearchTires(term);
+            AddGroup(groups, "Tires", tires);
+
+            var carTires = await SearchCarTires(term);
+            AddGroup(groups, "Car Tires", carTires);
+
+            var fuelExpenses = await SearchFuelExpenses(term);
+            AddGroup(groups, "Fuel Expenses", fuelExpenses);
+
+            var serviceRecords = await SearchServiceRecords(term);
+            AddGroup(groups, "Service Records", serviceRecords);
+
+            var insurances = await SearchInsurances(term);
+            AddGroup(groups, "Insurances", insurances);
+
+            var categories = await SearchCategories(term);
+            AddGroup(groups, "Expense Categories", categories);
+
+            var expenses = await SearchExpenses(term);
+            AddGroup(groups, "Expenses", expenses);
 
             if (User.IsInRole(AppRoles.Admin))
             {
-                AddGroup(groups, "Users", SearchUsers(term));
+                AddGroup(groups, "Users", await SearchUsers(term));
             }
         }
 
@@ -84,23 +99,12 @@ public class GlobalSearchController(
         return results;
     }
 
-    private IReadOnlyList<GlobalSearchItem> SearchCars(string term)
+    private async Task<IReadOnlyList<GlobalSearchItem>> SearchCars(string term)
     {
         var results = new List<GlobalSearchItem>();
-
-        foreach (var car in carRepository.GetAll())
+        var cars = await carRepository.GetListAsync(new CarFilter() { Search = term });
+        foreach (var car in cars)
         {
-            if (!Matches(car.Brand, term)
-                && !Matches(car.Model, term)
-                && !Matches(car.FuelType.ToString(), term)
-                && !Matches(car.Year.ToString(), term)
-                && !Matches(car.EngineVolume.ToString(), term)
-                && !Matches(car.CurrentMilage.ToString(), term)
-                && !Matches(car.Id.ToString(), term))
-            {
-                continue;
-            }
-
             var url = Url.Action("Details", "Cars", new { id = car.Id });
             if (string.IsNullOrWhiteSpace(url))
             {
@@ -120,21 +124,12 @@ public class GlobalSearchController(
         return results;
     }
 
-    private IReadOnlyList<GlobalSearchItem> SearchTires(string term)
+    private async Task<IReadOnlyList<GlobalSearchItem>> SearchTires(string term)
     {
         var results = new List<GlobalSearchItem>();
-
-        foreach (var tire in tireRepository.GetAll())
-        {
-            if (!Matches(tire.Brand, term)
-                && !Matches(tire.Model, term)
-                && !Matches(tire.Season, term)
-                && !Matches(tire.Price.ToString(), term)
-                && !Matches(tire.Id.ToString(), term))
-            {
-                continue;
-            }
-
+        var tires = await tireRepository.GetListAsync(new TireFilter() { Search = term });
+        foreach (var tire in tires)
+        {           
             var url = Url.Action("Details", "Tires", new { id = tire.Id });
             if (string.IsNullOrWhiteSpace(url))
             {
@@ -154,25 +149,12 @@ public class GlobalSearchController(
         return results;
     }
 
-    private IReadOnlyList<GlobalSearchItem> SearchCarTires(string term)
+    private async Task<IReadOnlyList<GlobalSearchItem>> SearchCarTires(string term)
     {
         var results = new List<GlobalSearchItem>();
-
-        foreach (var assignment in carTireRepository.GetAll())
+        var carTires = await carTireRepository.GetListAsync(new CarTireFilter() { Search = term });
+        foreach (var assignment in carTires)
         {
-            if (!Matches(assignment.CarId.ToString(), term)
-                && !Matches(assignment.TireId.ToString(), term)
-                && !Matches(assignment.InstalledDate.ToString("yyyy-MM-dd"), term)
-                && !Matches(assignment.Id.ToString(), term)
-                && !Matches(assignment.Car?.Brand, term)
-                && !Matches(assignment.Car?.Model, term)
-                && !Matches(assignment.Tire?.Brand, term)
-                && !Matches(assignment.Tire?.Model, term)
-                && !Matches(assignment.Tire?.Season, term))
-            {
-                continue;
-            }
-
             var url = Url.Action("Details", "CarTires", new { id = assignment.Id });
             if (string.IsNullOrWhiteSpace(url))
             {
@@ -194,25 +176,12 @@ public class GlobalSearchController(
         return results;
     }
 
-    private IReadOnlyList<GlobalSearchItem> SearchFuelExpenses(string term)
+    private async Task<IReadOnlyList<GlobalSearchItem>> SearchFuelExpenses(string term)
     {
         var results = new List<GlobalSearchItem>();
-
-        foreach (var expense in fuelExpenseRepository.GetAll())
+        var fuleExpenses = await fuelExpenseRepository.GetListAsync(new FuelExpenseFilter() { Search = term });
+        foreach (var expense in fuleExpenses)
         {
-            if (!Matches(expense.CarId.ToString(), term)
-                && !Matches(expense.TotalCost.ToString(), term)
-                && !Matches(expense.Liters.ToString(), term)
-                && !Matches(expense.PricePerLiter.ToString(), term)
-                && !Matches(expense.Kilometars.ToString(), term)
-                && !Matches(expense.FuelExpenseDate.ToString("yyyy-MM-dd"), term)
-                && !Matches(expense.Id.ToString(), term)
-                && !Matches(expense.Car?.Brand, term)
-                && !Matches(expense.Car?.Model, term))
-            {
-                continue;
-            }
-
             var url = Url.Action("Details", "FuelExpenses", new { id = expense.Id });
             if (string.IsNullOrWhiteSpace(url))
             {
@@ -233,25 +202,13 @@ public class GlobalSearchController(
         return results;
     }
 
-    private IReadOnlyList<GlobalSearchItem> SearchServiceRecords(string term)
+    private async Task<IReadOnlyList<GlobalSearchItem>> SearchServiceRecords(string term)
     {
         var results = new List<GlobalSearchItem>();
 
-        foreach (var record in serviceRecordRepository.GetAll())
+        var serviceRecords = await serviceRecordRepository.GetListAsync(new ServiceRecordFilter() { Search = term });
+        foreach (var record in serviceRecords)
         {
-            if (!Matches(record.ServiceType, term)
-                && !Matches(record.Description, term)
-                && !Matches(record.Cost.ToString(), term)
-                && !Matches(record.ServiceDate.ToString("yyyy-MM-dd"), term)
-                && !Matches(record.Mileage.ToString(), term)
-                && !Matches(record.CarId.ToString(), term)
-                && !Matches(record.Id.ToString(), term)
-                && !Matches(record.Car?.Brand, term)
-                && !Matches(record.Car?.Model, term))
-            {
-                continue;
-            }
-
             var url = Url.Action("Details", "ServiceRecords", new { id = record.Id });
             if (string.IsNullOrWhiteSpace(url))
             {
@@ -272,25 +229,13 @@ public class GlobalSearchController(
         return results;
     }
 
-    private IReadOnlyList<GlobalSearchItem> SearchInsurances(string term)
+    private async Task<IReadOnlyList<GlobalSearchItem>> SearchInsurances(string term)
     {
         var results = new List<GlobalSearchItem>();
 
-        foreach (var insurance in insuranceRepository.GetAll())
+        var insurances = await insuranceRepository.GetListAsync(new InsuranceFilter() { Search = term });
+        foreach (var insurance in insurances)
         {
-            if (!Matches(insurance.Company, term)
-                && !Matches(insurance.InsuranceType, term)
-                && !Matches(insurance.Price.ToString(), term)
-                && !Matches(insurance.StartDate.ToString("yyyy-MM-dd"), term)
-                && !Matches(insurance.EndDate.ToString("yyyy-MM-dd"), term)
-                && !Matches(insurance.CarId.ToString(), term)
-                && !Matches(insurance.Id.ToString(), term)
-                && !Matches(insurance.Car?.Brand, term)
-                && !Matches(insurance.Car?.Model, term))
-            {
-                continue;
-            }
-
             var url = Url.Action("Details", "Insurances", new { id = insurance.Id });
             if (string.IsNullOrWhiteSpace(url))
             {
@@ -310,17 +255,13 @@ public class GlobalSearchController(
         return results;
     }
 
-    private IReadOnlyList<GlobalSearchItem> SearchCategories(string term)
+    private async Task<IReadOnlyList<GlobalSearchItem>> SearchCategories(string term)
     {
         var results = new List<GlobalSearchItem>();
 
-        foreach (var category in expenseCategoryRepository.GetAll())
+        var categories = await expenseCategoryRepository.GetListAsync(new ExpenseCategoryFilter() { Search = term });
+        foreach (var category in categories)
         {
-            if (!Matches(category.Name, term) && !Matches(category.Id.ToString(), term))
-            {
-                continue;
-            }
-
             var url = Url.Action("Details", "ExpenseCategories", new { id = category.Id });
             if (string.IsNullOrWhiteSpace(url))
             {
@@ -340,22 +281,13 @@ public class GlobalSearchController(
         return results;
     }
 
-    private IReadOnlyList<GlobalSearchItem> SearchExpenses(string term)
+    private async Task<IReadOnlyList<GlobalSearchItem>> SearchExpenses(string term)
     {
         var results = new List<GlobalSearchItem>();
 
-        foreach (var expense in expenseRepository.GetAll())
+        var expenses = await expenseRepository.GetListAsync(new ExpenseFilter() { Search = term });
+        foreach (var expense in expenses)
         {
-            if (!Matches(expense.Description, term)
-                && !Matches(expense.Amount.ToString(), term)
-                && !Matches(expense.Date.ToString("yyyy-MM-dd"), term)
-                && !Matches(expense.Date.ToString("MM/dd"), term)
-                && !Matches(expense.Id.ToString(), term)
-                && !Matches(expense.Category?.Name, term))
-            {
-                continue;
-            }
-
             var url = Url.Action("Details", "Expenses", new { id = expense.Id });
             if (string.IsNullOrWhiteSpace(url))
             {
@@ -375,17 +307,10 @@ public class GlobalSearchController(
         return results;
     }
 
-    private IReadOnlyList<GlobalSearchItem> SearchUsers(string term)
+    private async Task<IReadOnlyList<GlobalSearchItem>> SearchUsers(string term)
     {
         var lowered = term.ToLowerInvariant();
-        var users = userManager.Users
-            .Where(user =>
-                (user.UserName != null && user.UserName.ToLower().Contains(lowered))
-                || (user.Email != null && user.Email.ToLower().Contains(lowered))
-                || user.Id.ToString().Contains(lowered))
-            .OrderBy(user => user.UserName)
-            .Take(ItemLimit)
-            .ToList();
+        var users = await userRepository.GetListAsync(new UserFilter() { Search = term });
 
         var results = new List<GlobalSearchItem>();
         foreach (var user in users)
@@ -399,6 +324,11 @@ public class GlobalSearchController(
             var label = user.UserName ?? $"User {user.Id}";
             var hint = user.Email ?? "";
             results.Add(new GlobalSearchItem(label, url, hint));
+
+            if (results.Count >= ItemLimit)
+            {
+                break;
+            }
         }
 
         return results;
