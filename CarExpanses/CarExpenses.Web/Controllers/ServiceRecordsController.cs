@@ -10,40 +10,41 @@ namespace CarExpenses.Web.Controllers;
 [Authorize]
 public class ServiceRecordsController(IServiceRecordRepository repository, ICarRepository carRepository) : Controller
 {
-    public IActionResult Index() => View(repository.GetAll());
+    public async Task<IActionResult> Index() => View(await repository.GetAllAsync());
 
     [HttpGet]
-    public IActionResult Search(string? query)
+    public async Task<IActionResult> Search(string? query)
     {
-        var serviceRecords = repository.Query(new ServiceRecordFilter { Search = query }).ToList();
+        var serviceRecords = await repository.GetLIstAsync(new ServiceRecordFilter { Search = query });
+
         return PartialView("_ServiceRecordList", serviceRecords);
     }
 
-    public IActionResult Details(int id)
+    public async Task<IActionResult> Details(int id)
     {
-        var serviceRecord = repository.GetById(id);
+        var serviceRecord = await repository.GetByIdAsync(id);
         return serviceRecord is null ? NotFound() : View(serviceRecord);
     }
 
     [HttpGet]
-    public IActionResult Create() => View("Form", BuildFormModel());
+    public async Task<IActionResult> Create() => View("Form", await BuildFormModel());
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Create(ServiceRecordFormViewModel formModel)
+    public async Task<IActionResult> Create(ServiceRecordFormViewModel formModel)
     {
         if (!ModelState.IsValid)
         {
             return View("Form", BuildFormModel(formModel));
         }
 
-        if (carRepository.GetById(formModel.CarId) is null)
+        if (await carRepository.GetByIdAsync(formModel.CarId) is null)
         {
             ModelState.AddModelError(nameof(formModel.CarId), "Car not found.");
             return View("Form", BuildFormModel(formModel));
         }
 
-        repository.Add(new ServiceRecord
+        await repository.AddAsync(new ServiceRecord
         {
             ServiceType = formModel.ServiceType,
             Description = formModel.Description,
@@ -56,15 +57,15 @@ public class ServiceRecordsController(IServiceRecordRepository repository, ICarR
     }
 
     [HttpGet]
-    public IActionResult Edit(int id)
+    public async Task<IActionResult> Edit(int id)
     {
-        var serviceRecord = repository.GetById(id);
-        return serviceRecord is null ? NotFound() : View("Form", BuildFormModel(serviceRecord));
+        var serviceRecord = await repository.GetByIdAsync(id);
+        return serviceRecord is null ? NotFound() : View("Form", await BuildFormModel(serviceRecord));
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Edit(int id, ServiceRecordFormViewModel formModel)
+    public async Task<IActionResult> Edit(int id, ServiceRecordFormViewModel formModel)
     {
         if (id != formModel.Id)
         {
@@ -76,7 +77,7 @@ public class ServiceRecordsController(IServiceRecordRepository repository, ICarR
             return View("Form", BuildFormModel(formModel));
         }
 
-        if (carRepository.GetById(formModel.CarId) is null)
+        if (await carRepository.GetByIdAsync(formModel.CarId) is null)
         {
             ModelState.AddModelError(nameof(formModel.CarId), "Car not found.");
             return View("Form", BuildFormModel(formModel));
@@ -93,7 +94,7 @@ public class ServiceRecordsController(IServiceRecordRepository repository, ICarR
             CarId = formModel.CarId
         };
 
-        if (!repository.Update(serviceRecord))
+        if (!await repository.UpdateAsync(serviceRecord))
         {
             return NotFound();
         }
@@ -101,24 +102,24 @@ public class ServiceRecordsController(IServiceRecordRepository repository, ICarR
     }
 
     [HttpGet]
-    public IActionResult Delete(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        var serviceRecord = repository.GetById(id);
+        var serviceRecord = await repository.GetByIdAsync(id);
         return serviceRecord is null ? NotFound() : View(serviceRecord);
     }
 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public IActionResult DeleteConfirmed(int id)
+    public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        if (!repository.Delete(id))
+        if (!await repository.DeleteAsync(id))
         {
             return NotFound();
         }
         return RedirectToAction(nameof(Index));
     }
 
-    private ServiceRecordFormViewModel BuildFormModel(ServiceRecord? serviceRecord = null)
+    private async Task<ServiceRecordFormViewModel> BuildFormModel(ServiceRecord? serviceRecord = null)
     {
         return new ServiceRecordFormViewModel
         {
@@ -129,7 +130,7 @@ public class ServiceRecordsController(IServiceRecordRepository repository, ICarR
             ServiceDate = serviceRecord?.ServiceDate ?? DateTime.Today,
             Mileage = serviceRecord?.Mileage ?? 0,
             CarId = serviceRecord?.CarId ?? 0,
-            CarOptions = carRepository.GetAll()
+            CarOptions = (await carRepository.GetAllAsync())
                 .OrderBy(car => car.Brand)
                 .ThenBy(car => car.Model)
                 .Select(car => new SelectListItem($"{car.Brand} {car.Model} ({car.Year})", car.Id.ToString()))
@@ -137,9 +138,9 @@ public class ServiceRecordsController(IServiceRecordRepository repository, ICarR
         };
     }
 
-    private ServiceRecordFormViewModel BuildFormModel(ServiceRecordFormViewModel formModel)
+    private async Task<ServiceRecordFormViewModel> BuildFormModel(ServiceRecordFormViewModel formModel)
     {
-        formModel.CarOptions = carRepository.GetAll()
+        formModel.CarOptions = (await carRepository.GetAllAsync())
             .OrderBy(car => car.Brand)
             .ThenBy(car => car.Model)
             .Select(car => new SelectListItem($"{car.Brand} {car.Model} ({car.Year})", car.Id.ToString()))

@@ -32,31 +32,18 @@ public sealed class CarsApiController : ControllerBase
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<CarListItemDto>>> GetAll(
-        [FromQuery] string? search,
-        [FromQuery] int? userId,
-        [FromQuery] FuelType? fuelType,
-        [FromQuery] int? minYear,
-        [FromQuery] int? maxYear)
+        [FromQuery] CarFilter filter)
     {
         var cars = await carRepository
-            .Query(new CarFilter
-            {
-                Search = search,
-                UserId = userId,
-                FuelType = fuelType,
-                MinYear = minYear,
-                MaxYear = maxYear
-            })
-            .Include(car => car.User)
-            .ToListAsync();
-        var result = cars.Select(DtoMapping.ToListItemDto).ToList();
+            .GetListAsync(filter);
+        var result = cars.Select(DtoMapping.ToDto).ToList();
         return Ok(result);
     }
 
     [HttpGet("{id:int}")]
     public async Task<ActionResult<CarDetailDto>> GetById(int id)
     {
-        var car = await GetCarDetailsAsync(id);
+        var car = await carRepository.GetByIdAsync(id);
         if (car is null)
         {
             return NotFound();
@@ -98,10 +85,9 @@ public sealed class CarsApiController : ControllerBase
             FuelType = dto.FuelType
         };
 
-        dbContext.Cars.Add(car);
-        await dbContext.SaveChangesAsync();
+        var carId = await carRepository.AddAsync(car);
 
-        var created = await GetCarDetailsAsync(car.Id);
+        var created = await carRepository.GetByIdAsync(car.Id);
         if (created is null)
         {
             return NotFound();
@@ -113,7 +99,7 @@ public sealed class CarsApiController : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, CarUpdateDto dto)
     {
-        var car = await dbContext.Cars.FirstOrDefaultAsync(item => item.Id == id);
+        var car = await carRepository.GetByIdAsync(id);
         if (car is null)
         {
             return NotFound();
@@ -129,39 +115,34 @@ public sealed class CarsApiController : ControllerBase
 
             car.UserId = dto.UserId;
         }
-        car.Brand = dto.Brand;
-        car.Model = dto.Model;
-        car.Year = dto.Year;
-        car.EngineVolume = dto.EngineVolume;
-        car.CurrentMilage = dto.CurrentMilage;
-        car.PurchasePrice = dto.PurchasePrice;
-        car.PurchaseDate = dto.PurchaseDate;
-        car.FuelType = dto.FuelType;
+        await carRepository.UpdateAsync(new ()
+        {
+            Id = id,
+            UserId = car.UserId,
+            Brand = dto.Brand,
+            Model = dto.Model,
+            Year = dto.Year,
+            EngineVolume = dto.EngineVolume,
+            CurrentMilage = dto.CurrentMilage,
+            PurchasePrice = dto.PurchasePrice,
+            PurchaseDate = dto.PurchaseDate,
+            FuelType = dto.FuelType
+        });
 
-        await dbContext.SaveChangesAsync();
         return NoContent();
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var car = await dbContext.Cars
-            .Include(item => item.FuelExpenses)
-            .Include(item => item.ServiceRecords)
-            .Include(item => item.Insurances)
-            .Include(item => item.CarTires)!
-                .ThenInclude(carTire => carTire.Tire)
-            .Include(item => item.Expenses)!
-                .ThenInclude(expense => expense.Category)
-            .FirstOrDefaultAsync(item => item.Id == id);
+        var car = await carRepository.GetByIdAsync(id);
 
         if (car is null)
         {
             return NotFound();
         }
 
-        dbContext.Cars.Remove(car);
-        await dbContext.SaveChangesAsync();
+        await carRepository.DeleteAsync(id);
         return NoContent();
     }
 

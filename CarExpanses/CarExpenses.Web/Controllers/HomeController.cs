@@ -20,12 +20,10 @@ namespace CarExpenses.Web.Controllers
         }
 
         [Authorize]
-        public IActionResult Dashboard()
+        public async Task<IActionResult> Dashboard()
         {
-            var cars = carRepository
-                .GetAll()
-                .OrderByDescending(car => car.Expenses?.Sum(expense => expense.Amount) ?? 0m)
-                .ToList();
+            var cars = await carRepository
+                .GetAllAsync();
 
             return View(cars);
         }

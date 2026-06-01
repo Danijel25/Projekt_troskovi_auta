@@ -25,20 +25,10 @@ public sealed class CarTiresApiController : ControllerBase
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<CarTireDto>>> GetAll(
-        [FromQuery] int? carId,
-        [FromQuery] int? tireId,
-        [FromQuery] DateTime? fromDate,
-        [FromQuery] DateTime? toDate)
+        [FromQuery] CarTireFilter filter)
     {
         var carTires = await carTireRepository
-            .Query(new CarTireFilter
-            {
-                CarId = carId,
-                TireId = tireId,
-                FromDate = fromDate,
-                ToDate = toDate
-            })
-            .ToListAsync();
+            .GetListAsync(filter);
         var result = carTires.Select(DtoMapping.ToDto).ToList();
         return Ok(result);
     }
@@ -46,11 +36,7 @@ public sealed class CarTiresApiController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<ActionResult<CarTireDto>> GetById(int id)
     {
-        var carTire = await dbContext.CarTires
-            .Include(item => item.Car)
-            .Include(item => item.Tire)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(item => item.Id == id);
+        var carTire = await carTireRepository.GetByIdAsync(id);
 
         if (carTire is null)
         {
@@ -82,14 +68,9 @@ public sealed class CarTiresApiController : ControllerBase
             InstalledDate = dto.InstalledDate
         };
 
-        dbContext.CarTires.Add(carTire);
-        await dbContext.SaveChangesAsync();
+        var carTireId = await carTireRepository.AddAsync(carTire);
 
-        var created = await dbContext.CarTires
-            .Include(item => item.Car)
-            .Include(item => item.Tire)
-            .AsNoTracking()
-            .FirstAsync(item => item.Id == carTire.Id);
+        var created = await carTireRepository.GetByIdAsync(carTireId);
 
         return CreatedAtAction(nameof(GetById), new { id = carTire.Id }, DtoMapping.ToDto(created));
     }
@@ -97,7 +78,7 @@ public sealed class CarTiresApiController : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, CarTireUpdateDto dto)
     {
-        var carTire = await dbContext.CarTires.FirstOrDefaultAsync(item => item.Id == id);
+        var carTire = await carTireRepository.GetByIdAsync(id);
         if (carTire is null)
         {
             return NotFound();
@@ -115,25 +96,26 @@ public sealed class CarTiresApiController : ControllerBase
             return ValidationProblem(ModelState);
         }
 
-        carTire.CarId = dto.CarId;
-        carTire.TireId = dto.TireId;
-        carTire.InstalledDate = dto.InstalledDate;
-
-        await dbContext.SaveChangesAsync();
+        await carTireRepository.UpdateAsync(new()
+        {
+            Id = id,
+            CarId = dto.CarId,
+            TireId = dto.TireId,
+            InstalledDate = dto.InstalledDate
+        });
         return NoContent();
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var carTire = await dbContext.CarTires.FirstOrDefaultAsync(item => item.Id == id);
+        var carTire = await carTireRepository.GetByIdAsync(id);
         if (carTire is null)
         {
             return NotFound();
         }
 
-        dbContext.CarTires.Remove(carTire);
-        await dbContext.SaveChangesAsync();
+        await carTireRepository.DeleteAsync(id);
         return NoContent();
     }
 }

@@ -27,11 +27,12 @@ public sealed class ExpenseCategoriesApiController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ExpenseCategoryDto>>> GetAll([FromQuery] string? search)
+    public async Task<ActionResult<IEnumerable<ExpenseCategoryDto>>> GetAll(
+        [FromQuery] ExpenseCategoryFilter filter
+       )
     {
         var categories = await expenseCategoryRepository
-            .Query(new ExpenseCategoryFilter { Search = search })
-            .ToListAsync();
+            .GetListAsync(filter);
         var result = categories.Select(DtoMapping.ToDto).ToList();
         return Ok(result);
     }
@@ -39,11 +40,7 @@ public sealed class ExpenseCategoriesApiController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<ActionResult<ExpenseCategoryDetailDto>> GetById(int id)
     {
-        var category = await dbContext.ExpenseCategories
-            .Include(item => item.Expenses)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(item => item.Id == id);
-
+        var category = await expenseCategoryRepository.GetByIdAsync(id);
         if (category is null)
         {
             return NotFound();
@@ -61,13 +58,9 @@ public sealed class ExpenseCategoriesApiController : ControllerBase
             Name = dto.Name
         };
 
-        dbContext.ExpenseCategories.Add(category);
-        await dbContext.SaveChangesAsync();
+        var expenseCategoryId = await expenseCategoryRepository.AddAsync(category);
 
-        var created = await dbContext.ExpenseCategories
-            .Include(item => item.Expenses)
-            .AsNoTracking()
-            .FirstAsync(item => item.Id == category.Id);
+        var created = await expenseCategoryRepository.GetByIdAsync(expenseCategoryId);
 
         return CreatedAtAction(nameof(GetById), new { id = category.Id }, DtoMapping.ToDetailDto(created));
     }
@@ -76,15 +69,17 @@ public sealed class ExpenseCategoriesApiController : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, ExpenseCategoryUpdateDto dto)
     {
-        var category = await dbContext.ExpenseCategories.FirstOrDefaultAsync(item => item.Id == id);
+        var category = await expenseCategoryRepository.GetByIdAsync(id);
         if (category is null)
         {
             return NotFound();
         }
 
-        category.Name = dto.Name;
-
-        await dbContext.SaveChangesAsync();
+        await expenseCategoryRepository.UpdateAsync(new ()
+        {
+            Id = id,
+            Name = dto.Name
+        });
         return NoContent();
     }
 
@@ -92,17 +87,14 @@ public sealed class ExpenseCategoriesApiController : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var category = await dbContext.ExpenseCategories
-            .Include(item => item.Expenses)
-            .FirstOrDefaultAsync(item => item.Id == id);
+        var category = await expenseCategoryRepository.GetByIdAsync(id);
 
         if (category is null)
         {
             return NotFound();
         }
 
-        dbContext.ExpenseCategories.Remove(category);
-        await dbContext.SaveChangesAsync();
+        await expenseCategoryRepository.DeleteAsync(id);
         return NoContent();
     }
 }

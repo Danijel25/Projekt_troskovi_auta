@@ -6,7 +6,7 @@ namespace CarExpenses.DAL.Repositories;
 
 public sealed class TireRepository(CarExpesesDbContext dbContext) : ITireRepository
 {
-    public IQueryable<Tire> Query(TireFilter filter)
+    public async Task<IReadOnlyList<Tire>> GetListAsync(TireFilter filter)
     {
         var query = dbContext.Tires
             .Include(tire => tire.CarTires)
@@ -43,25 +43,26 @@ public sealed class TireRepository(CarExpesesDbContext dbContext) : ITireReposit
                 || (hasPrice && tire.Price == priceValue));
         }
 
-        return query.OrderBy(tire => tire.Id);
+        return await query.OrderBy(tire => tire.Id).ToListAsync();
     }
 
-    public IReadOnlyList<Tire> GetAll() => Query(new TireFilter()).ToList();
+    public async Task<IReadOnlyList<Tire>> GetAllAsync() => await GetListAsync(new TireFilter());
 
-    public Tire? GetById(int id) => dbContext.Tires
+    public async Task<Tire?> GetByIdAsync(int id) => await dbContext.Tires
         .Include(tire => tire.CarTires)
         .AsNoTracking()
-        .FirstOrDefault(tire => tire.Id == id);
+        .FirstOrDefaultAsync(tire => tire.Id == id);
 
-    public void Add(Tire tire)
+    public async Task<int> AddAsync(Tire tire)
     {
-        dbContext.Tires.Add(tire);
-        dbContext.SaveChanges();
+        await dbContext.Tires.AddAsync(tire);
+        await dbContext.SaveChangesAsync();
+        return tire.Id;
     }
 
-    public bool Update(Tire tire)
+    public async Task<bool> UpdateAsync(Tire tire)
     {
-        var existing = dbContext.Tires.FirstOrDefault(item => item.Id == tire.Id);
+        var existing = await dbContext.Tires.FirstOrDefaultAsync(item => item.Id == tire.Id);
         if (existing is null)
         {
             return false;
@@ -72,15 +73,15 @@ public sealed class TireRepository(CarExpesesDbContext dbContext) : ITireReposit
         existing.Season = tire.Season;
         existing.Price = tire.Price;
 
-        dbContext.SaveChanges();
+        await dbContext.SaveChangesAsync();
         return true;
     }
 
-    public bool Delete(int id)
+    public async Task<bool>  DeleteAsync(int id)
     {
-        var tire = dbContext.Tires
+        var tire = await dbContext.Tires
             .Include(item => item.CarTires)
-            .FirstOrDefault(item => item.Id == id);
+            .FirstOrDefaultAsync(item => item.Id == id);
 
         if (tire is null)
         {
@@ -88,7 +89,7 @@ public sealed class TireRepository(CarExpesesDbContext dbContext) : ITireReposit
         }
 
         dbContext.Tires.Remove(tire);
-        dbContext.SaveChanges();
+        await dbContext.SaveChangesAsync();
         return true;
     }
 }

@@ -5,86 +5,86 @@ namespace CarExpenses.DAL.Repositories;
 
 public interface ICarRepository
 {
-    IQueryable<Car> Query(CarFilter filter);
-    IReadOnlyList<Car> GetAll();
-    Car? GetById(int id);
-    void Add(Car car);
-    bool Update(Car car);
-    bool Delete(int id);
+    Task<IReadOnlyList<Car>> GetListAsync(CarFilter filter);
+    Task<IReadOnlyList<Car>> GetAllAsync();
+    Task<Car?> GetByIdAsync(int id);
+    Task<int> AddAsync(Car car);
+    Task<bool> UpdateAsync(Car car);
+    Task<bool> DeleteAsync(int id);
 }
 
 public interface ITireRepository
 {
-    IQueryable<Tire> Query(TireFilter filter);
-    IReadOnlyList<Tire> GetAll();
-    Tire? GetById(int id);
-    void Add(Tire tire);
-    bool Update(Tire tire);
-    bool Delete(int id);
+    Task<IReadOnlyList<Tire>> GetListAsync(TireFilter filter);
+    Task<IReadOnlyList<Tire>> GetAllAsync();
+    Task<Tire?> GetByIdAsync(int id);
+    Task<int> AddAsync(Tire tire);
+    Task<bool> UpdateAsync(Tire tire);
+    Task<bool> DeleteAsync(int id);
 }
 
 public interface ICarTireRepository
 {
-    IQueryable<CarTire> Query(CarTireFilter filter);
-    IReadOnlyList<CarTire> GetAll();
-    CarTire? GetById(int id);
-    void Add(CarTire carTire);
-    bool Update(CarTire carTire);
-    bool Delete(int id);
+    Task<IReadOnlyList<CarTire>> GetListAsync(CarTireFilter filter);
+    Task<IReadOnlyList<CarTire>> GetAllAsync();
+    Task<CarTire?> GetByIdAsync(int id);
+    Task<int> AddAsync(CarTire carTire);
+    Task<bool> UpdateAsync(CarTire carTire);
+    Task<bool> DeleteAsync(int id);
 }
 
 public interface IFuelExpenseRepository
 {
-    IQueryable<FuelExpense> Query(FuelExpenseFilter filter);
-    IReadOnlyList<FuelExpense> GetAll();
-    FuelExpense? GetById(int id);
-    void Add(FuelExpense fuelExpense);
-    bool Update(FuelExpense fuelExpense);
-    bool Delete(int id);
+    Task<IReadOnlyList<FuelExpense>> GetListAsync(FuelExpenseFilter filter);
+    Task<IReadOnlyList<FuelExpense>> GetAllAsync();
+    Task<FuelExpense?> GetByIdAsync(int id);
+    Task<int> AddAsync(FuelExpense fuelExpense);
+    Task<bool> UpdateAsync(FuelExpense fuelExpense);
+    Task<bool> DeleteAsync(int id);
 }
 
 public interface IServiceRecordRepository
 {
-    IQueryable<ServiceRecord> Query(ServiceRecordFilter filter);
-    IReadOnlyList<ServiceRecord> GetAll();
-    ServiceRecord? GetById(int id);
-    void Add(ServiceRecord serviceRecord);
-    bool Update(ServiceRecord serviceRecord);
-    bool Delete(int id);
+    Task<IReadOnlyList<ServiceRecord>> GetLIstAsync(ServiceRecordFilter filter);
+    Task<IReadOnlyList<ServiceRecord>> GetAllAsync();
+    Task<ServiceRecord?> GetByIdAsync(int id);
+    Task<int> AddAsync(ServiceRecord serviceRecord);
+    Task<bool> UpdateAsync(ServiceRecord serviceRecord);
+    Task<bool> DeleteAsync(int id);
 }
 
 public interface IInsuranceRepository
 {
-    IQueryable<Insurance> Query(InsuranceFilter filter);
-    IReadOnlyList<Insurance> GetAll();
-    Insurance? GetById(int id);
-    void Add(Insurance insurance);
-    bool Update(Insurance insurance);
-    bool Delete(int id);
+    Task<IReadOnlyList<Insurance>> GetListAsync(InsuranceFilter filter);
+    Task<IReadOnlyList<Insurance>> GetAllAsync();
+    Task<Insurance?> GetByIdAsync(int id);
+    Task<int> AddAsync(Insurance insurance);
+    Task<bool> UpdateAsync(Insurance insurance);
+    Task<bool> DeleteAsync(int id);
 }
 
 public interface IExpenseCategoryRepository
 {
-    IQueryable<ExpenseCategory> Query(ExpenseCategoryFilter filter);
-    IReadOnlyList<ExpenseCategory> GetAll();
-    ExpenseCategory? GetById(int id);
-    void Add(ExpenseCategory category);
-    bool Update(ExpenseCategory category);
-    bool Delete(int id);
+    Task<IReadOnlyList<ExpenseCategory>> GetListAsync(ExpenseCategoryFilter filter);
+    Task<IReadOnlyList<ExpenseCategory>> GetAllAsync();
+    Task<ExpenseCategory?> GetByIdAsync(int id);
+    Task<int> AddAsync(ExpenseCategory category);
+    Task<bool> UpdateAsync(ExpenseCategory category);
+    Task<bool> DeleteAsync(int id);
 }
 
 public interface IExpenseRepository
 {
-    IQueryable<Expense> Query(ExpenseFilter filter);
-    IReadOnlyList<Expense> GetAll();
-    Expense? GetById(int id);
-    void Add(Expense expense);
-    bool Update(Expense expense);
-    bool Delete(int id);
+    Task<IReadOnlyList<Expense>> GetListAsync(ExpenseFilter filter);
+    Task<IReadOnlyList<Expense>> GetAllAsync();
+    Task<Expense?> GetByIdAsync(int id);
+    Task<int> AddAsync(Expense expense);
+    Task<bool> UpdateAsync(Expense expense);
+    Task<bool> DeleteAsync(int id);
 }
 
 public interface IUserRepository
 {
-    IQueryable<User> Query(UserFilter filter);
+    Task<IReadOnlyList<User>> GetListAsync(UserFilter filter);
     Task<User?> GetByIdAsync(int id);
 }

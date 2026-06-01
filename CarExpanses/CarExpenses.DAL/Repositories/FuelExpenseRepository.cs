@@ -6,7 +6,7 @@ namespace CarExpenses.DAL.Repositories;
 
 public sealed class FuelExpenseRepository(CarExpesesDbContext dbContext) : IFuelExpenseRepository
 {
-    public IQueryable<FuelExpense> Query(FuelExpenseFilter filter)
+    public async Task<IReadOnlyList<FuelExpense>> GetListAsync(FuelExpenseFilter filter)
     {
         var query = dbContext.FuelExpenses
             .Include(fuelExpense => fuelExpense.Car)
@@ -55,25 +55,26 @@ public sealed class FuelExpenseRepository(CarExpesesDbContext dbContext) : IFuel
                 || (item.Car != null && (item.Car.Brand.Contains(term) || item.Car.Model.Contains(term))));
         }
 
-        return query.OrderByDescending(item => item.FuelExpenseDate);
+        return await query.OrderByDescending(item => item.FuelExpenseDate).ToListAsync();
     }
 
-    public IReadOnlyList<FuelExpense> GetAll() => Query(new FuelExpenseFilter()).ToList();
+    public async Task<IReadOnlyList<FuelExpense>> GetAllAsync() => await GetListAsync(new FuelExpenseFilter());
 
-    public FuelExpense? GetById(int id) => dbContext.FuelExpenses
+    public async Task<FuelExpense?> GetByIdAsync(int id) => await dbContext.FuelExpenses
         .Include(fuelExpense => fuelExpense.Car)
         .AsNoTracking()
-        .FirstOrDefault(fuelExpense => fuelExpense.Id == id);
+        .FirstOrDefaultAsync(fuelExpense => fuelExpense.Id == id);
 
-    public void Add(FuelExpense fuelExpense)
+    public async Task<int> AddAsync(FuelExpense fuelExpense)
     {
-        dbContext.FuelExpenses.Add(fuelExpense);
-        dbContext.SaveChanges();
+        await dbContext.FuelExpenses.AddAsync(fuelExpense);
+        await dbContext.SaveChangesAsync();
+        return fuelExpense.Id;
     }
 
-    public bool Update(FuelExpense fuelExpense)
+    public async Task<bool> UpdateAsync(FuelExpense fuelExpense)
     {
-        var existing = dbContext.FuelExpenses.FirstOrDefault(item => item.Id == fuelExpense.Id);
+        var existing = await dbContext.FuelExpenses.FirstOrDefaultAsync(item => item.Id == fuelExpense.Id);
         if (existing is null)
         {
             return false;
@@ -85,20 +86,20 @@ public sealed class FuelExpenseRepository(CarExpesesDbContext dbContext) : IFuel
         existing.Kilometars = fuelExpense.Kilometars;
         existing.CarId = fuelExpense.CarId;
 
-        dbContext.SaveChanges();
+        await dbContext.SaveChangesAsync();
         return true;
     }
 
-    public bool Delete(int id)
+    public async Task<bool> DeleteAsync(int id)
     {
-        var fuelExpense = dbContext.FuelExpenses.FirstOrDefault(item => item.Id == id);
+        var fuelExpense = await dbContext.FuelExpenses.FirstOrDefaultAsync(item => item.Id == id);
         if (fuelExpense is null)
         {
             return false;
         }
 
         dbContext.FuelExpenses.Remove(fuelExpense);
-        dbContext.SaveChanges();
+        await dbContext.SaveChangesAsync();
         return true;
     }
 }

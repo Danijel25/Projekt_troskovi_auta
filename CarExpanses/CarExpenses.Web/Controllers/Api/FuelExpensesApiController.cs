@@ -25,22 +25,10 @@ public sealed class FuelExpensesApiController : ControllerBase
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<FuelExpenseDto>>> GetAll(
-        [FromQuery] int? carId,
-        [FromQuery] DateTime? fromDate,
-        [FromQuery] DateTime? toDate,
-        [FromQuery] decimal? minLiters,
-        [FromQuery] decimal? maxLiters)
+        [FromQuery] FuelExpenseFilter filter)
     {
         var fuelExpenses = await fuelExpenseRepository
-            .Query(new FuelExpenseFilter
-            {
-                CarId = carId,
-                FromDate = fromDate,
-                ToDate = toDate,
-                MinLiters = minLiters,
-                MaxLiters = maxLiters
-            })
-            .ToListAsync();
+            .GetListAsync(filter);
         var result = fuelExpenses.Select(DtoMapping.ToDto).ToList();
         return Ok(result);
     }
@@ -48,10 +36,7 @@ public sealed class FuelExpensesApiController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<ActionResult<FuelExpenseDto>> GetById(int id)
     {
-        var fuelExpense = await dbContext.FuelExpenses
-            .Include(item => item.Car)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(item => item.Id == id);
+        var fuelExpense = await fuelExpenseRepository.GetByIdAsync(id);
 
         if (fuelExpense is null)
         {
@@ -79,13 +64,9 @@ public sealed class FuelExpensesApiController : ControllerBase
             CarId = dto.CarId
         };
 
-        dbContext.FuelExpenses.Add(fuelExpense);
-        await dbContext.SaveChangesAsync();
+        var fuelExpenseId = await fuelExpenseRepository.AddAsync(fuelExpense);
 
-        var created = await dbContext.FuelExpenses
-            .Include(item => item.Car)
-            .AsNoTracking()
-            .FirstAsync(item => item.Id == fuelExpense.Id);
+        var created = await fuelExpenseRepository.GetByIdAsync(fuelExpenseId);
 
         return CreatedAtAction(nameof(GetById), new { id = fuelExpense.Id }, DtoMapping.ToDto(created));
     }
@@ -93,7 +74,7 @@ public sealed class FuelExpensesApiController : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, FuelExpenseUpdateDto dto)
     {
-        var fuelExpense = await dbContext.FuelExpenses.FirstOrDefaultAsync(item => item.Id == id);
+        var fuelExpense = await fuelExpenseRepository.GetByIdAsync(id);
         if (fuelExpense is null)
         {
             return NotFound();
@@ -105,27 +86,28 @@ public sealed class FuelExpensesApiController : ControllerBase
             return ValidationProblem(ModelState);
         }
 
-        fuelExpense.FuelExpenseDate = dto.FuelExpenseDate;
-        fuelExpense.Liters = dto.Liters;
-        fuelExpense.PricePerLiter = dto.PricePerLiter;
-        fuelExpense.Kilometars = dto.Kilometars;
-        fuelExpense.CarId = dto.CarId;
-
-        await dbContext.SaveChangesAsync();
+        await fuelExpenseRepository.UpdateAsync(new()
+        {
+            Id = id,
+            FuelExpenseDate = dto.FuelExpenseDate,
+            Liters = dto.Liters,
+            PricePerLiter = dto.PricePerLiter,
+            Kilometars = dto.Kilometars,
+            CarId = dto.CarId
+        });
         return NoContent();
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var fuelExpense = await dbContext.FuelExpenses.FirstOrDefaultAsync(item => item.Id == id);
+        var fuelExpense = await fuelExpenseRepository.GetByIdAsync(id);
         if (fuelExpense is null)
         {
             return NotFound();
         }
 
-        dbContext.FuelExpenses.Remove(fuelExpense);
-        await dbContext.SaveChangesAsync();
+        await fuelExpenseRepository.DeleteAsync(id);
         return NoContent();
     }
 }

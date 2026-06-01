@@ -6,7 +6,7 @@ namespace CarExpenses.DAL.Repositories;
 
 public sealed class CarTireRepository(CarExpesesDbContext dbContext) : ICarTireRepository
 {
-    public IQueryable<CarTire> Query(CarTireFilter filter)
+    public async Task<IReadOnlyList<CarTire>> GetListAsync(CarTireFilter filter)
     {
         var query = dbContext.CarTires
             .Include(carTire => carTire.Car)
@@ -50,26 +50,29 @@ public sealed class CarTireRepository(CarExpesesDbContext dbContext) : ICarTireR
                     || item.Tire.Season.Contains(term))));
         }
 
-        return query.OrderByDescending(item => item.InstalledDate);
+        return await query
+            .OrderByDescending(item => item.InstalledDate)
+            .ToListAsync();
     }
 
-    public IReadOnlyList<CarTire> GetAll() => Query(new CarTireFilter()).ToList();
+    public async Task<IReadOnlyList<CarTire>> GetAllAsync() => await GetListAsync(new CarTireFilter());
 
-    public CarTire? GetById(int id) => dbContext.CarTires
+    public async Task<CarTire?> GetByIdAsync(int id) => await dbContext.CarTires
         .Include(carTire => carTire.Car)
         .Include(carTire => carTire.Tire)
         .AsNoTracking()
-        .FirstOrDefault(carTire => carTire.Id == id);
+        .FirstOrDefaultAsync(carTire => carTire.Id == id);
 
-    public void Add(CarTire carTire)
+    public async Task<int> AddAsync(CarTire carTire)
     {
-        dbContext.CarTires.Add(carTire);
-        dbContext.SaveChanges();
+        await dbContext.CarTires.AddAsync(carTire);
+        await dbContext.SaveChangesAsync();
+        return carTire.Id;
     }
 
-    public bool Update(CarTire carTire)
+    public async Task<bool> UpdateAsync(CarTire carTire)
     {
-        var existing = dbContext.CarTires.FirstOrDefault(item => item.Id == carTire.Id);
+        var existing = await dbContext.CarTires.FirstOrDefaultAsync(item => item.Id == carTire.Id);
         if (existing is null)
         {
             return false;
@@ -79,20 +82,20 @@ public sealed class CarTireRepository(CarExpesesDbContext dbContext) : ICarTireR
         existing.TireId = carTire.TireId;
         existing.InstalledDate = carTire.InstalledDate;
 
-        dbContext.SaveChanges();
+        await dbContext.SaveChangesAsync();
         return true;
     }
 
-    public bool Delete(int id)
+    public async Task<bool> DeleteAsync(int id)
     {
-        var carTire = dbContext.CarTires.FirstOrDefault(item => item.Id == id);
+        var carTire = await dbContext.CarTires.FirstOrDefaultAsync(item => item.Id == id);
         if (carTire is null)
         {
             return false;
         }
 
         dbContext.CarTires.Remove(carTire);
-        dbContext.SaveChanges();
+        await dbContext.SaveChangesAsync();
         return true;
     }
 }

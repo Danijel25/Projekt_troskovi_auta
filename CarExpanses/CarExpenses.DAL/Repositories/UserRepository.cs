@@ -5,7 +5,7 @@ namespace CarExpenses.DAL.Repositories;
 
 public sealed class UserRepository(CarExpesesDbContext dbContext) : IUserRepository
 {
-    public IQueryable<User> Query(UserFilter filter)
+    public async Task<IReadOnlyList<User>> GetListAsync(UserFilter filter)
     {
         var query = dbContext.Users
             .Include(user => user.Cars)
@@ -22,12 +22,12 @@ public sealed class UserRepository(CarExpesesDbContext dbContext) : IUserReposit
                 || (hasId && user.Id == idValue));
         }
 
-        return query.OrderBy(user => user.Id);
+        return await query.OrderBy(user => user.Id).ToListAsync();
     }
 
-    public Task<User?> GetByIdAsync(int id)
+    public async Task<User?> GetByIdAsync(int id)
     {
-        return dbContext.Users
+        return await dbContext.Users
             .Include(user => user.Cars)
             .AsNoTracking()
             .FirstOrDefaultAsync(user => user.Id == id);

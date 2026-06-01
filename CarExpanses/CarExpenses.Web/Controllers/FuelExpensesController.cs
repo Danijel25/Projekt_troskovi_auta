@@ -11,40 +11,40 @@ namespace CarExpenses.Web.Controllers;
 [Route("troskovi-goriva/[action]")]
 public class FuelExpensesController(IFuelExpenseRepository repository, ICarRepository carRepository) : Controller
 {
-    public IActionResult Index() => View(repository.GetAll());
+    public async Task<IActionResult> Index() => View(await repository.GetAllAsync());
 
     [HttpGet]
-    public IActionResult Search(string? query)
+    public async Task<IActionResult> Search(string? query)
     {
-        var fuelExpenses = repository.Query(new FuelExpenseFilter { Search = query }).ToList();
+        var fuelExpenses = await repository.GetListAsync(new FuelExpenseFilter { Search = query });
         return PartialView("_FuelExpenseList", fuelExpenses);
     }
 
-    public IActionResult Details(int id)
+    public async Task<IActionResult> Details(int id)
     {
-        var fuelExpense = repository.GetById(id);
+        var fuelExpense = await repository.GetByIdAsync(id);
         return fuelExpense is null ? NotFound() : View(fuelExpense);
     }
 
     [HttpGet]
-    public IActionResult Create() => View("Form", BuildFormModel());
+    public async Task<IActionResult> Create() => View("Form", await BuildFormModel());
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Create(FuelExpenseFormViewModel formModel)
+    public async Task<IActionResult> Create(FuelExpenseFormViewModel formModel)
     {
         if (!ModelState.IsValid)
         {
             return View("Form", BuildFormModel(formModel));
         }
 
-        if (carRepository.GetById(formModel.CarId) is null)
+        if (await carRepository.GetByIdAsync(formModel.CarId) is null)
         {
             ModelState.AddModelError(nameof(formModel.CarId), "Car not found.");
             return View("Form", BuildFormModel(formModel));
         }
 
-        repository.Add(new FuelExpense
+        await repository.AddAsync(new FuelExpense
         {
             FuelExpenseDate = formModel.FuelExpenseDate,
             Liters = formModel.Liters,
@@ -56,15 +56,15 @@ public class FuelExpensesController(IFuelExpenseRepository repository, ICarRepos
     }
 
     [HttpGet]
-    public IActionResult Edit(int id)
+    public async Task<IActionResult> Edit(int id)
     {
-        var fuelExpense = repository.GetById(id);
-        return fuelExpense is null ? NotFound() : View("Form", BuildFormModel(fuelExpense));
+        var fuelExpense = await repository.GetByIdAsync(id);
+        return fuelExpense is null ? NotFound() : View("Form", await BuildFormModel(fuelExpense));
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Edit(int id, FuelExpenseFormViewModel formModel)
+    public async Task<IActionResult> Edit(int id, FuelExpenseFormViewModel formModel)
     {
         if (id != formModel.Id)
         {
@@ -76,7 +76,7 @@ public class FuelExpensesController(IFuelExpenseRepository repository, ICarRepos
             return View("Form", BuildFormModel(formModel));
         }
 
-        if (carRepository.GetById(formModel.CarId) is null)
+        if (await carRepository.GetByIdAsync(formModel.CarId) is null)
         {
             ModelState.AddModelError(nameof(formModel.CarId), "Car not found.");
             return View("Form", BuildFormModel(formModel));
@@ -92,7 +92,7 @@ public class FuelExpensesController(IFuelExpenseRepository repository, ICarRepos
             CarId = formModel.CarId
         };
 
-        if (!repository.Update(fuelExpense))
+        if (!await repository.UpdateAsync(fuelExpense))
         {
             return NotFound();
         }
@@ -100,24 +100,24 @@ public class FuelExpensesController(IFuelExpenseRepository repository, ICarRepos
     }
 
     [HttpGet]
-    public IActionResult Delete(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        var fuelExpense = repository.GetById(id);
+        var fuelExpense = await repository.GetByIdAsync(id);
         return fuelExpense is null ? NotFound() : View(fuelExpense);
     }
 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public IActionResult DeleteConfirmed(int id)
+    public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        if (!repository.Delete(id))
+        if (!await repository.DeleteAsync(id))
         {
             return NotFound();
         }
         return RedirectToAction(nameof(Index));
     }
 
-    private FuelExpenseFormViewModel BuildFormModel(FuelExpense? fuelExpense = null)
+    private async Task<FuelExpenseFormViewModel> BuildFormModel(FuelExpense? fuelExpense = null)
     {
         return new FuelExpenseFormViewModel
         {
@@ -127,7 +127,7 @@ public class FuelExpensesController(IFuelExpenseRepository repository, ICarRepos
             PricePerLiter = fuelExpense?.PricePerLiter ?? 0,
             Kilometars = fuelExpense?.Kilometars ?? 0,
             CarId = fuelExpense?.CarId ?? 0,
-            CarOptions = carRepository.GetAll()
+            CarOptions = (await carRepository.GetAllAsync())
                 .OrderBy(car => car.Brand)
                 .ThenBy(car => car.Model)
                 .Select(car => new SelectListItem($"{car.Brand} {car.Model} ({car.Year})", car.Id.ToString()))
@@ -135,9 +135,9 @@ public class FuelExpensesController(IFuelExpenseRepository repository, ICarRepos
         };
     }
 
-    private FuelExpenseFormViewModel BuildFormModel(FuelExpenseFormViewModel formModel)
+    private async Task<FuelExpenseFormViewModel> BuildFormModel(FuelExpenseFormViewModel formModel)
     {
-        formModel.CarOptions = carRepository.GetAll()
+        formModel.CarOptions = (await carRepository.GetAllAsync())
             .OrderBy(car => car.Brand)
             .ThenBy(car => car.Model)
             .Select(car => new SelectListItem($"{car.Brand} {car.Model} ({car.Year})", car.Id.ToString()))

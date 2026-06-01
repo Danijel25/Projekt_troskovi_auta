@@ -25,50 +25,25 @@ public sealed class ExpensesApiController : ControllerBase
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ExpenseListItemDto>>> GetAll(
-        [FromQuery] string? search,
-        [FromQuery] int? categoryId,
-        [FromQuery] int? carId,
-        [FromQuery] DateTime? fromDate,
-        [FromQuery] DateTime? toDate,
-        [FromQuery] decimal? minAmount,
-        [FromQuery] decimal? maxAmount)
+        [FromQuery] ExpenseFilter filter)
     {
-        var query = expenseRepository.Query(new ExpenseFilter
-        {
-            Search = search,
-            CategoryId = categoryId,
-            CarId = carId,
-            FromDate = fromDate,
-            ToDate = toDate,
-            MinAmount = minAmount,
-            MaxAmount = maxAmount
-        });
+        var expense = (await expenseRepository
+                    .GetListAsync(filter))
+                    .Select(DtoMapping.ToSummaryDto);        
 
-        var items = await query
-            .Select(item => new ExpenseListItemDto
-            {
-                Id = item.Id,
-                Description = item.Description,
-                Amount = item.Amount,
-                Date = item.Date,
-                CategoryId = item.CategoryId,
-                Category = item.Category == null ? null : new ExpenseCategoryDto
-                {
-                    Id = item.Category.Id,
-                    Name = item.Category.Name
-                },
-                CarId = item.CarId
-            })
-            .ToListAsync();
-
-        return Ok(items);
+        return Ok(expense);        
     }
 
     [HttpGet("{id:int}")]
     public async Task<ActionResult<ExpenseDetailDto>> GetById(int id)
     {
-        var dto = await BuildExpenseDetailAsync(id);
-        return dto is null ? NotFound() : Ok(dto);
+        var entity = await expenseRepository.GetByIdAsync(id);
+        if(entity is null)
+        {
+            return NotFound();
+        }
+        var dto = DtoMapping.ToDto(entity);
+        return Ok(dto);
     }
 
     [HttpPost]
@@ -96,23 +71,18 @@ public sealed class ExpensesApiController : ControllerBase
             CarId = dto.CarId
         };
 
-        dbContext.Expenses.Add(expense);
+        var expenseId = await expenseRepository.AddAsync(expense);
+        
+        var created = await expenseRepository.GetByIdAsync(expenseId);
+        var createdDto = DtoMapping.ToDto(created);
 
-        await dbContext.SaveChangesAsync();
-
-        var created = await BuildExpenseDetailAsync(expense.Id);
-        if (created is null)
-        {
-            return NotFound();
-        }
-
-        return CreatedAtAction(nameof(GetById), new { id = expense.Id }, created);
+        return CreatedAtAction(nameof(Create), new { id = expense.Id }, createdDto);
     }
 
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, ExpenseUpdateDto dto)
     {
-        var expense = await dbContext.Expenses.FirstOrDefaultAsync(item => item.Id == id);
+        var expense = await expenseRepository.GetByIdAsync(id);
         if (expense is null)
         {
             return NotFound();
@@ -130,54 +100,29 @@ public sealed class ExpensesApiController : ControllerBase
             return ValidationProblem(ModelState);
         }
 
-        expense.Description = dto.Description;
-        expense.Amount = dto.Amount;
-        expense.Date = dto.Date;
-        expense.CategoryId = dto.CategoryId;
-        expense.Category = null!;
-        expense.CarId = dto.CarId;
-
-        await dbContext.SaveChangesAsync();
+        await expenseRepository.UpdateAsync(new()
+        {
+            Id = id,
+            Description = dto.Description,
+            Amount = dto.Amount,
+            Date = dto.Date,
+            CategoryId = dto.CategoryId,
+            CarId = dto.CarId
+        });
+        
         return NoContent();
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var expense = await dbContext.Expenses.FirstOrDefaultAsync(item => item.Id == id);
+        var expense = await expenseRepository.GetByIdAsync(id);
         if (expense is null)
         {
             return NotFound();
         }
 
-        dbContext.Expenses.Remove(expense);
-        await dbContext.SaveChangesAsync();
+        await expenseRepository.DeleteAsync(id);
         return NoContent();
-    }
-
-    private async Task<ExpenseDetailDto?> BuildExpenseDetailAsync(int id)
-    {
-        var expense = await dbContext.Expenses
-            .Include(item => item.Category)
-            .Include(item => item.Car)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(item => item.Id == id);
-
-        if (expense is null)
-        {
-            return null;
-        }
-
-        return new ExpenseDetailDto
-        {
-            Id = expense.Id,
-            Description = expense.Description,
-            Amount = expense.Amount,
-            Date = expense.Date,
-            CategoryId = expense.CategoryId,
-            Category = expense.Category is null ? null : DtoMapping.ToDto(expense.Category),
-            CarId = expense.CarId,
-            Car = expense.Car is null ? null : DtoMapping.ToSummaryDto(expense.Car)
-        };
-    }
+    }    
 }

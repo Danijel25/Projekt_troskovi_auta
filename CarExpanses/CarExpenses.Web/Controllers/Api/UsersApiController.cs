@@ -25,11 +25,12 @@ public sealed class UsersApiController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<UserSummaryDto>>> GetAll([FromQuery] string? search)
+    public async Task<ActionResult<IEnumerable<UserSummaryDto>>> GetAll(
+        [FromQuery] UserFilter filter
+        )
     {
         var users = await userRepository
-            .Query(new UserFilter { Search = search })
-            .ToListAsync();
+            .GetListAsync(filter);
         var result = users.Select(DtoMapping.ToSummaryDto).ToList();
         return Ok(result);
     }
@@ -37,10 +38,7 @@ public sealed class UsersApiController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<ActionResult<UserDetailDto>> GetById(int id)
     {
-        var user = await userManager.Users
-            .Include(item => item.Cars)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(item => item.Id == id);
+        var user = await userRepository .GetByIdAsync(id);
 
         if (user is null)
         {
