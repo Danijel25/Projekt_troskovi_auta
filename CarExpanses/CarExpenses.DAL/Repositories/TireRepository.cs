@@ -55,7 +55,7 @@ public sealed class TireRepository(CarExpesesDbContext dbContext) : ITireReposit
 
     public async Task<int> AddAsync(Tire tire)
     {
-        await dbContext.Tires.AddAsync(tire);
+        dbContext.Tires.Add(tire);
         await dbContext.SaveChangesAsync();
         return tire.Id;
     }

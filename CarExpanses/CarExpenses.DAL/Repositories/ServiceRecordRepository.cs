@@ -57,7 +57,7 @@ public sealed class ServiceRecordRepository(CarExpesesDbContext dbContext) : ISe
 
     public async Task<int> AddAsync(ServiceRecord serviceRecord)
     {
-        await dbContext.ServiceRecords.AddAsync(serviceRecord);
+        dbContext.ServiceRecords.Add(serviceRecord);
         await dbContext.SaveChangesAsync();
         return serviceRecord.Id;
     }

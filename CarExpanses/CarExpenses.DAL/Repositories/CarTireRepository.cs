@@ -65,7 +65,7 @@ public sealed class CarTireRepository(CarExpesesDbContext dbContext) : ICarTireR
 
     public async Task<int> AddAsync(CarTire carTire)
     {
-        await dbContext.CarTires.AddAsync(carTire);
+        dbContext.CarTires.Add(carTire);
         await dbContext.SaveChangesAsync();
         return carTire.Id;
     }

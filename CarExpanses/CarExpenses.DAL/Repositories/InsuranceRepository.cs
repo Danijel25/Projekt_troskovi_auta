@@ -57,7 +57,7 @@ public sealed class InsuranceRepository(CarExpesesDbContext dbContext) : IInsura
 
     public async Task<int> AddAsync(Insurance insurance)
     {
-        await dbContext.Insurances.AddAsync(insurance);
+        dbContext.Insurances.Add(insurance);
         await dbContext.SaveChangesAsync();
         return insurance.Id;
     }

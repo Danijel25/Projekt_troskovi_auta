@@ -34,7 +34,7 @@ public sealed class ExpenseCategoryRepository(CarExpesesDbContext dbContext) : I
 
     public async Task<int> AddAsync(ExpenseCategory category)
     {
-        await dbContext.ExpenseCategories.AddAsync(category);
+        dbContext.ExpenseCategories.Add(category);
         await dbContext.SaveChangesAsync();
         return category.Id;
     }

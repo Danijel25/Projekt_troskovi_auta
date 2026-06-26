@@ -67,7 +67,7 @@ public sealed class FuelExpenseRepository(CarExpesesDbContext dbContext) : IFuel
 
     public async Task<int> AddAsync(FuelExpense fuelExpense)
     {
-        await dbContext.FuelExpenses.AddAsync(fuelExpense);
+        dbContext.FuelExpenses.Add(fuelExpense);
         await dbContext.SaveChangesAsync();
         return fuelExpense.Id;
     }
