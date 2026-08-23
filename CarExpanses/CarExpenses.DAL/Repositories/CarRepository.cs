@@ -69,13 +69,13 @@ public sealed class CarRepository(CarExpesesDbContext dbContext) : ICarRepositor
     public async Task<int> AddAsync(Car car)
     {
         dbContext.Cars.Add(car);
-        await dbContext.SaveChangesAsync();
+        dbContext.SaveChanges();
         return car.Id;
     }
 
     public async Task<bool> UpdateAsync(Car car)
     {
-        var existing = await dbContext.Cars.FirstOrDefaultAsync(item => item.Id == car.Id);
+        var existing = dbContext.Cars.FirstOrDefault(item => item.Id == car.Id);
         if (existing is null)
         {
             return false;

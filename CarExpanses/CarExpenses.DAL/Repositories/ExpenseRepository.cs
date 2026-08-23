@@ -75,13 +75,13 @@ public sealed class ExpenseRepository(CarExpesesDbContext dbContext) : IExpenseR
     public async Task<int> AddAsync(Expense expense)
     {        
         dbContext.Expenses.Add(expense);
-        await dbContext.SaveChangesAsync();
+        dbContext.SaveChanges();
         return expense.Id;
     }
 
     public async Task<bool> UpdateAsync(Expense expense)
     {
-        var existing = await dbContext.Expenses.FirstOrDefaultAsync(item => item.Id == expense.Id);
+        var existing = dbContext.Expenses.FirstOrDefault(item => item.Id == expense.Id);
         if (existing is null)
         {
             return false;

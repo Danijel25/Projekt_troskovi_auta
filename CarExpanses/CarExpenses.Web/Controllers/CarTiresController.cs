@@ -44,7 +44,7 @@ public class CarTiresController(ICarTireRepository repository, ICarRepository ca
             return View("Form", BuildFormModelAsync(formModel));
         }
 
-        if (tireRepository.GetByIdAsync(formModel.TireId) is null)
+        if (await tireRepository.GetByIdAsync(formModel.TireId) is null)
         {
             ModelState.AddModelError(nameof(formModel.TireId), "Tire not found.");
             return View("Form", BuildFormModelAsync(formModel));
@@ -86,7 +86,7 @@ public class CarTiresController(ICarTireRepository repository, ICarRepository ca
             return View("Form", BuildFormModelAsync(formModel));
         }
 
-        if (tireRepository.GetByIdAsync(formModel.TireId) is null)
+        if (await tireRepository.GetByIdAsync(formModel.TireId) is null)
         {
             ModelState.AddModelError(nameof(formModel.TireId), "Tire not found.");
             return View("Form", BuildFormModelAsync(formModel));

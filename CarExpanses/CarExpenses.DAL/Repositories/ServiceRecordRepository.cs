@@ -58,13 +58,13 @@ public sealed class ServiceRecordRepository(CarExpesesDbContext dbContext) : ISe
     public async Task<int> AddAsync(ServiceRecord serviceRecord)
     {
         dbContext.ServiceRecords.Add(serviceRecord);
-        await dbContext.SaveChangesAsync();
+        dbContext.SaveChanges();
         return serviceRecord.Id;
     }
 
     public async Task<bool> UpdateAsync(ServiceRecord serviceRecord)
     {
-        var existing = await dbContext.ServiceRecords.FirstOrDefaultAsync(item => item.Id == serviceRecord.Id);
+        var existing = dbContext.ServiceRecords.FirstOrDefault(item => item.Id == serviceRecord.Id);
         if (existing is null)
         {
             return false;

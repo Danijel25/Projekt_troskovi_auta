@@ -56,13 +56,13 @@ public sealed class TireRepository(CarExpesesDbContext dbContext) : ITireReposit
     public async Task<int> AddAsync(Tire tire)
     {
         dbContext.Tires.Add(tire);
-        await dbContext.SaveChangesAsync();
+        dbContext.SaveChanges();
         return tire.Id;
     }
 
     public async Task<bool> UpdateAsync(Tire tire)
     {
-        var existing = await dbContext.Tires.FirstOrDefaultAsync(item => item.Id == tire.Id);
+        var existing = dbContext.Tires.FirstOrDefault(item => item.Id == tire.Id);
         if (existing is null)
         {
             return false;
@@ -73,7 +73,7 @@ public sealed class TireRepository(CarExpesesDbContext dbContext) : ITireReposit
         existing.Season = tire.Season;
         existing.Price = tire.Price;
 
-        await dbContext.SaveChangesAsync();
+        dbContext.SaveChanges();
         return true;
     }
 

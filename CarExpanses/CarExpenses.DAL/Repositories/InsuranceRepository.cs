@@ -58,13 +58,13 @@ public sealed class InsuranceRepository(CarExpesesDbContext dbContext) : IInsura
     public async Task<int> AddAsync(Insurance insurance)
     {
         dbContext.Insurances.Add(insurance);
-        await dbContext.SaveChangesAsync();
+        dbContext.SaveChanges();
         return insurance.Id;
     }
 
     public async Task<bool>  UpdateAsync(Insurance insurance)
     {
-        var existing = await dbContext.Insurances.FirstOrDefaultAsync(item => item.Id == insurance.Id);
+        var existing = dbContext.Insurances.FirstOrDefault(item => item.Id == insurance.Id);
         if (existing is null)
         {
             return false;
